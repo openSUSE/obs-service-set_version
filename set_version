@@ -27,7 +27,7 @@ while test $# -gt 0; do
       shift
     ;;
     *-basename)
-      BASENAME="^$2"
+      BASENAME="$2"
       shift
     ;;
     *-outdir)
@@ -44,13 +44,24 @@ while test $# -gt 0; do
 done
 
 get_version_from_file () {
+  # Search for tarball filenames including a version
   for ending in "tar.*" "tgz$" "tbz2$" "zip$" ; do
     if [ -z "$MYVERSION" ]; then
-      MYVERSION=`ls -1t | sed -n "s,$BASENAME.*[-_]\([0123456789].*\).${ending},\1,p" | head -n 1`
+      MYVERSION=`ls -1t | sed -n "s,^$BASENAME.*[-_]\([0123456789].*\).${ending},\1,p" | head -n 1`
+    else
+      break;
     fi
   done
+  # Search for a version in the root-directory name of the content's file list:
+  for gz_ending in "tar.gz" "tgz" "tar.bz2" "tbz2" ; do
+    if [ -z "$MYVERSION" ]; then
+      MYVERSION=`tar tf $BASENAME*.${gz_ending} | sed -e 's,/.*,,' | uniq | sed -n "s,$BASENAME.*[-_]\([0123456789].*\),\1,p"`
+    else
+      break;
+    fi
+  done
+  # Take version number (and optional revision) from Debian changelog
   if [ -z "$MYVERSION" ]; then
-    # take version number (and optional revision) from Debian changelog
     MYVERSION=`head -n 1 *debian.changelog 2>/dev/null | sed -ne 's/.*(\(.*\)).*/\1/p'`
   fi
   if [ -z "$MYVERSION" ]; then
