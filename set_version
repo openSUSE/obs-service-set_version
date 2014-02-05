@@ -44,18 +44,11 @@ while test $# -gt 0; do
 done
 
 get_version_from_file () {
-  if [ -z "$MYVERSION" ]; then
-    MYVERSION=`ls -1t | sed -n "s,$BASENAME.*[-_]\([0123456789].*\).tar.*,\1,p" | head -n 1`
-  fi
-  if [ -z "$MYVERSION" ]; then
-    MYVERSION=`ls -1t | sed -n "s,$BASENAME.*[-_]\([0123456789].*\).tgz$,\1,p" | head -n 1`
-  fi
-  if [ -z "$MYVERSION" ]; then
-    MYVERSION=`ls -1t | sed -n "s,$BASENAME.*[-_]\([0123456789].*\).tbz2$,\1,p" | head -n 1`
-  fi
-  if [ -z "$MYVERSION" ]; then
-    MYVERSION=`ls -1t | sed -n "s,$BASENAME.*[-_]\([0123456789].*\).zip$,\1,p" | head -n 1`
-  fi
+  for ending in "tar.*" "tgz$" "tbz2$" "zip$" ; do
+    if [ -z "$MYVERSION" ]; then
+      MYVERSION=`ls -1t | sed -n "s,$BASENAME.*[-_]\([0123456789].*\).${ending},\1,p" | head -n 1`
+    fi
+  done
   if [ -z "$MYVERSION" ]; then
     # take version number (and optional revision) from Debian changelog
     MYVERSION=`head -n 1 *debian.changelog 2>/dev/null | sed -ne 's/.*(\(.*\)).*/\1/p'`
