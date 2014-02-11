@@ -55,7 +55,7 @@ get_version_from_file () {
   # Search for a version in the root-directory name of the content's file list:
   for gz_ending in "tar.gz" "tgz" "tar.bz2" "tbz2" ; do
     if [ -z "$MYVERSION" ]; then
-      MYVERSION=`tar tf $BASENAME*.${gz_ending} | sed -e 's,/.*,,' | uniq | sed -n "s,$BASENAME.*[-_]\([0123456789].*\),\1,p"`
+      MYVERSION=`tar tf $BASENAME*.${gz_ending} | sed -e 's,/.*,,' | uniq | sed -n "s,$BASENAME.*[-_]\(.*\),\1,p"`
     else
       break;
     fi
