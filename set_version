@@ -37,6 +37,11 @@ sub usage()
 
   Options:
 
+  --version:  use given version string, do not detect it from source files
+
+  --basename: detect version based on the file name with a given prefix
+
+  --file:     modify only this build description. maybe used multiple times.
 END
 ;
   exit;
@@ -87,6 +92,27 @@ unless ($version) {
   }
 }
 
+# Detect version based tar'd directory name
+unless ($version) {
+  my @binsufs = qw{tar tar.gz tgz tar.bz2 tbz2 tar.xz zip};
+  my $binsufsre = join('|', map {"\Q$_\E"} @binsufs);
+  for my $name (@srcfiles) {
+    if ($name =~ /$binsufsre$/) {
+       open( FH, "tar tf $name |" );
+       my $line;
+       while (defined($line = <FH>)) {
+         if ($line =~ /$basename.*[-_]([\d][^\/]*)\/.*/) {
+            $version=$1;
+            last;
+         }
+       }
+       close( FH );
+
+       last if $version;
+    }
+  }
+}
+
 # to replace tags in .spec and .dsc files
 sub replace_tag {
   my ($filename, $tag, $string) = @_;
@@ -119,6 +145,8 @@ sub replace_tag {
 
   rename("$outdir/.$filename", "$outdir/$filename") || die("rename failed");
 }
+
+die("No version found or defined") unless $version;
 
 # handle rpm spec and debian dsc files
 @files = grep {$_ =~ /.(spec|dsc)$/} @srcfiles if @files <= 0;
