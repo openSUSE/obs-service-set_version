@@ -19,6 +19,7 @@ my $outdir;
 my @files;
 
 use strict;
+use warnings;
 use Data::Dumper;
 use File::Basename;
 
