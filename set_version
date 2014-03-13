@@ -33,7 +33,7 @@ sub usage()
 
   Required:
 
-  --output:   mediaset, build only for the given mediaset, identify by name
+  --outdir:   out put directory for modified sources
 
   Options:
 
