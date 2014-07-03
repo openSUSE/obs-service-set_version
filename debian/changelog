@@ -1,0 +1,5 @@
+obs-service-set-version (0.4.1) unstable; urgency=low
+
+  * Initial release
+
+ -- Daniel Gollub <dgollub@brocade.com>  Thu, 03 Jul 2014 09:04:52 +0200
