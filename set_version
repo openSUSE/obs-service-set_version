@@ -170,7 +170,8 @@ for my $file (@files) {
 use Digest::MD5;
 
 # handle arch linux PKGBUILD files
-if ( -e "PKGBUILD" ) {
+@files = grep {$_ =~ /PKGBUILD$/} @srcfiles;
+for my $pkgbuild (@files) {
   # find md5sum of tar ball
   my $md5sum;
   my $tarfile;
@@ -196,7 +197,7 @@ if ( -e "PKGBUILD" ) {
   close(FILE);
 
   die ("Failed to calculate md5sum") unless $md5sum;
-  replace_tag("PKGBUILD", "pkgver", $version);
-  replace_tag("PKGBUILD", "pkgrel", "0");
-  replace_tag("PKGBUILD", "md5sums", "('".$md5sum."')");
+  replace_tag($pkgbuild, "pkgver", $version);
+  replace_tag($pkgbuild, "pkgrel", "0");
+  replace_tag($pkgbuild, "md5sums", "('".$md5sum."')");
 }
