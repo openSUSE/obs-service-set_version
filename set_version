@@ -160,9 +160,11 @@ sub replace_tag {
 
 die("No version found or defined") unless $version;
 
+# if no files explicitly specified process whole directory
+push @files, @srcfiles if @files <= 0;
+
 # handle rpm spec and debian dsc files
-@files = grep {$_ =~ /.(spec|dsc)$/} @srcfiles if @files <= 0;
-for my $file (@files) {
+for my $file (grep {$_ =~ /.(spec|dsc)$/} @files) {
   replace_tag($file, 'Version', $version);
   replace_tag($file, 'Release', "0");
 }
@@ -170,8 +172,7 @@ for my $file (@files) {
 use Digest::MD5;
 
 # handle arch linux PKGBUILD files
-@files = grep {$_ =~ /PKGBUILD$/} @srcfiles;
-for my $pkgbuild (@files) {
+for my $pkgbuild (grep {$_ =~ /PKGBUILD$/} @files) {
   # find md5sum of tar ball
   my $md5sum;
   my $tarfile;
