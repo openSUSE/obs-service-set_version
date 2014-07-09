@@ -115,7 +115,7 @@ unless ($version) {
 
 # Detect version based on Debian changelog
 unless ($version) {
-  if (my $dch = glob("*debian.changelog")) {
+  if (defined(my $dch = glob("*debian.changelog"))) {
     open ( FH,  "$dch" );
     my $line = <FH>;
     if ($line =~ /.*\((.*)\).*/) {
