@@ -80,6 +80,9 @@ opendir(D, ".") || return ();
 my @srcfiles = grep {$_ ne '.' && $_ ne '..'} readdir(D);
 closedir D;
 
+# sorted local file list by modification time (newest first)
+@srcfiles = sort { -M "$a" <=> -M "$b" } (@srcfiles);
+
 # Detect version based on file names
 unless ($version) {
   my @binsufs = qw{tar tar.gz tgz tar.bz2 tbz2 tar.xz zip};
