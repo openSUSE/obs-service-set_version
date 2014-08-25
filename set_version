@@ -85,7 +85,7 @@ unless ($version) {
   my @binsufs = qw{tar tar.gz tgz tar.bz2 tbz2 tar.xz zip};
   my $binsufsre = join('|', map {"\Q$_\E"} @binsufs);
   for my $name (@srcfiles) {
-    if ($name =~ /^$basename.*[-_]([\d].*).(?:$binsufsre)$/) {
+    if ($name =~ /^$basename.*[-_]([\d].*)\.(?:$binsufsre)$/) {
        $version=$1;
        last;
     }
