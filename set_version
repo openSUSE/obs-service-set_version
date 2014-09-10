@@ -80,6 +80,9 @@ opendir(D, ".") || return ();
 my @srcfiles = grep {$_ ne '.' && $_ ne '..'} readdir(D);
 closedir D;
 
+# sorted local file list by modification time (newest first)
+@srcfiles = sort { -M "$a" <=> -M "$b" } (@srcfiles);
+
 # Detect version based on file names
 unless ($version) {
   my @binsufs = qw{tar tar.gz tgz tar.bz2 tbz2 tar.xz zip};
@@ -115,7 +118,7 @@ unless ($version) {
 
 # Detect version based on Debian changelog
 unless ($version) {
-  if (my $dch = glob("*debian.changelog")) {
+  if (defined(my $dch = glob("*debian.changelog"))) {
     open ( FH,  "$dch" );
     my $line = <FH>;
     if ($line =~ /.*\((.*)\).*/) {
@@ -158,20 +161,58 @@ sub replace_tag {
   rename("$outdir/.$filename", "$outdir/$filename") || die("rename failed");
 }
 
+# to replace version in debian.changelog file
+sub replace_debian_changelog_version {
+  my ($filename, $string) = @_;
+  local *R;
+  local *W;
+  # read, try first an modified version in outdir
+  if (!open(R, '<', "$outdir/$filename")) {
+    if (!open(R, '<', $filename)) {
+      die("unable to read $filename: $!\n");
+      return undef;
+    }
+  }
+  if (!open(W, '>', "$outdir/.$filename")) {
+    die("unable to write .$filename: $!\n");
+    return undef;
+  }
+  my $line = <R>;
+  # only replace version in the most recent entry (the first line)
+  if ($line =~ /.*\((.*)\).*/) {
+    $line =~ s/$1/$string/;
+  }
+  print W "$line";
+  # copy the rest
+  while (<R>) {
+    print W;
+  }
+  close R;
+  close W;
+
+  rename("$outdir/.$filename", "$outdir/$filename") || die("rename failed");
+}
+
 die("No version found or defined") unless $version;
 
+# if no files explicitly specified process whole directory
+push @files, @srcfiles if @files <= 0;
+
 # handle rpm spec and debian dsc files
-@files = grep {$_ =~ /.(spec|dsc)$/} @srcfiles if @files <= 0;
-for my $file (@files) {
+for my $file (grep {$_ =~ /.(spec|dsc)$/} @files) {
   replace_tag($file, 'Version', $version);
   replace_tag($file, 'Release', "0");
+}
+
+# update debian.changelog file
+for my $file (grep {$_ =~ /.*debian.changelog$/} @files) {
+  replace_debian_changelog_version($file, $version);
 }
 
 use Digest::MD5;
 
 # handle arch linux PKGBUILD files
-@files = grep {$_ =~ /PKGBUILD$/} @srcfiles;
-for my $pkgbuild (@files) {
+for my $pkgbuild (grep {$_ =~ /PKGBUILD$/} @files) {
   # find md5sum of tar ball
   my $md5sum;
   my $tarfile;
