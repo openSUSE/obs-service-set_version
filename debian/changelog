@@ -1,3 +1,13 @@
+obs-service-set-version (0.4.2) unstable; urgency=low
+
+  * the extension needs to be \.
+  * test with defined() at ./set_version line 118.
+  * Fix processing of --file parameter
+  * Add support for setting the version in debian.changelog
+  * Sort local file list based on modification time (newest first)
+
+ -- Jan Blunck <jblunck@infradead.org>  Wed, 10 Sep 2014 18:20:20 +0200
+
 obs-service-set-version (0.4.1) unstable; urgency=low
 
   * Initial release
