@@ -11,3 +11,4 @@ install:
 script:
   - flake8 tests/
   - python -m unittest discover tests/
+
