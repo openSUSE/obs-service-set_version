@@ -9,5 +9,5 @@ The authoritative source is https://github.com/openSUSE/obs-service-set_version
 ## Test suite
 To run the testsuite, execute:
 
-    python -m unittest discover tests/
+    nosetests
 
