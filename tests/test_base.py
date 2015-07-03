@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import tarfile
 import tempfile
 
 
@@ -61,6 +62,16 @@ class SetVersionBaseTest(unittest.TestCase):
                       file_path, string, content)
         self.assertFalse(contains,
                          err_msg)
+
+    def _write_tarfile(self, tar_name, tar_dirs):
+        """write a tarfile with the given (empty) dirs"""
+        tar_path = os.path.join(self._tmpdir, tar_name)
+        with tarfile.open(tar_path, "w") as t:
+            for d in tar_dirs:
+                td = tarfile.TarInfo(d)
+                td.type = tarfile.DIRTYPE
+                t.addfile(td)
+        return tar_path
 
     def _run_set_version(self, params=[]):
         cmd = [SET_VERSION_EXECUTABLE, '--outdir', '.'] + params

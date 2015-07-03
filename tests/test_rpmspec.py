@@ -16,7 +16,6 @@
 
 
 import os
-import tarfile
 
 from ddt import ddt, file_data
 
@@ -35,16 +34,6 @@ class SetVersionSpecfile(SetVersionBaseTest):
                 f.write("%s: %s" % (key, val))
             f.write("\n")
         return spec_path
-
-    def _write_tarfile(self, tar_name, tar_dirs):
-        """write a tarfile with the given (empty) dirs"""
-        tar_path = os.path.join(self._tmpdir, tar_name)
-        with tarfile.open(tar_path, "w") as t:
-            for d in tar_dirs:
-                td = tarfile.TarInfo(d)
-                td.type = tarfile.DIRTYPE
-                t.addfile(td)
-        return tar_path
 
     @file_data("data_test_from_commandline.json")
     def test_from_commandline(self, data):
