@@ -15,18 +15,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,USA.
 
 
-# py26 compat
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 import os
 import re
 import shutil
 import subprocess
 import tarfile
 import tempfile
+import unittest
 
 
 SET_VERSION_EXECUTABLE = os.path.abspath(
