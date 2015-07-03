@@ -7,6 +7,12 @@ This is the git repository for [openSUSE:Tools/obs-service-set_version](https://
 The authoritative source is https://github.com/openSUSE/obs-service-set_version
 
 ## Test suite
+To run the full testsuite, some dependencies are needed:
+
+    zypper in devscripts
+
+If the dependencies are not installed, some tests are skipped.
+
 To run the testsuite, execute:
 
     python -m unittest discover tests/
