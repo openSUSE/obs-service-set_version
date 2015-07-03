@@ -41,17 +41,55 @@ def has_dch_executable():
 class SetVersionDebianChangelog(SetVersionBaseTest):
     """Test set_version service for debian/changelog files"""
 
-    def _write_debian_changelog(self, version):
+    def _write_debian_changelog(self, filename, version):
         subprocess.check_call("dch --create --empty -v "
-                              "%s --package foobar -c debian.changelog" %
-                              version, shell=True)
-        return os.path.join(self._tmpdir, "debian.changelog")
+                              "%s --package foobar -c %s" %
+                              (version, filename), shell=True)
+        return os.path.join(self._tmpdir, filename)
 
     @file_data("data_test_from_commandline.json")
     def test_from_commandline(self, data):
         spec_tags, new_version = data
         old_version = "8.8.8"
-        changelog_path = self._write_debian_changelog(old_version)
+        changelog_path = self._write_debian_changelog(
+            "debian.changelog", old_version)
         self._run_set_version(params=['--version', new_version])
         self._check_file_assert_contains(changelog_path, new_version)
         self._check_file_assert_not_contains(changelog_path, old_version)
+
+    @file_data("data_test_from_tarball_with_single_file.json")
+    def test_from_tarball_with_single_file(self, data):
+        tarball_name, tarball_dirs, expected_version = data
+        old_version = "8.8.8"
+        changelog_path = self._write_debian_changelog(
+            "debian.changelog", old_version)
+        self._write_tarfile(tarball_name, tarball_dirs)
+        self._run_set_version()
+        self._check_file_assert_contains(changelog_path, expected_version)
+        self._check_file_assert_not_contains(changelog_path, old_version)
+
+    @file_data("data_test_from_tarball_with_basename_with_multiple_files.json")
+    def test_from_tarball_with_basename_with_multiple_files(self, data):
+        tarball_name, tarball_dirs, expected_version, dchlog_files = data
+        dchlog_path = []
+        old_version = "9.9.9-1foobar3"
+        for s in filter(lambda x: x.endswith("debian.changelog"),
+                        dchlog_files):
+            dchlog_path.append(
+                self._write_debian_changelog(s, old_version))
+        self._write_tarfile(tarball_name, tarball_dirs)
+        self._run_set_version(["--basename", "testprog"])
+        for s in dchlog_path:
+            self._check_file_assert_contains(s, expected_version)
+            self._check_file_assert_not_contains(s, old_version)
+
+    @file_data("data_test_from_tarball_with_basename.json")
+    def test_from_tarball_with_basename(self, data):
+        tarball_name, tarball_dirs, expected_version = data
+        old_version = "9.9.9-0+git3~10"
+        dchlog_path = self._write_debian_changelog("debian.changelog",
+                                                   old_version)
+        self._write_tarfile(tarball_name, tarball_dirs)
+        self._run_set_version(["--basename", "testprog"])
+        self._check_file_assert_contains(dchlog_path, expected_version)
+        self._check_file_assert_not_contains(dchlog_path, old_version)

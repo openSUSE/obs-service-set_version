@@ -82,7 +82,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
     def test_from_tarball_with_basename_with_multiple_files(self, data):
         tarball_name, tarball_dirs, expected_version, spec_files = data
         spec_path = []
-        for s in spec_files:
+        for s in filter(lambda x: x.endswith(".spec"), spec_files):
             spec_path.append(self._write_specfile(s, {"Version": "UNKNOWN"}))
         self._write_tarfile(tarball_name, tarball_dirs)
         self._run_set_version(["--basename", "testprog"])
