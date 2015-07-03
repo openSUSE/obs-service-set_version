@@ -19,7 +19,7 @@ import subprocess
 import unittest
 
 
-from ddt import data, ddt, unpack
+from ddt import ddt, file_data
 
 from test_base import SetVersionBaseTest
 
@@ -47,14 +47,9 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
                               version, shell=True)
         return os.path.join(self._tmpdir, "debian.changelog")
 
-    @data(
-        ({"Version": "1.2.3"}, "1"),
-        ({"Version": "1.2.3"}, "3.4.5"),
-        ({"Version": "1.2.3~456+789-Devel3"}, "3.4.5"),
-        ({"Version": "3.4.5"}, "1.2.3~456+789-Devel3"),
-    )
-    @unpack
-    def test_from_commandline(self, spec_tags, new_version):
+    @file_data("data_test_from_commandline.json")
+    def test_from_commandline(self, data):
+        spec_tags, new_version = data
         old_version = "8.8.8"
         changelog_path = self._write_debian_changelog(old_version)
         self._run_set_version(params=['--version', new_version])
