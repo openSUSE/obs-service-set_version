@@ -217,14 +217,14 @@ for my $pkgbuild (grep {$_ =~ /PKGBUILD$/} @files) {
   my $md5sum;
   my $tarfile;
   for my $file (@srcfiles) {
-    if ( $file =~ /^_service:.*[-_]$version.*/ ) {
+    if ( $file =~ /^_service:.*[-_]\Q$version\E.*/ ) {
       $tarfile = $file;
       last;
     }
   }
   unless($tarfile) {
     for my $file (@srcfiles) {
-      if ( $file =~ /.*[-_]$version.*/ ) {
+      if ( $file =~ /.*[-_]\Q$version\E.*/ ) {
         $tarfile = $file;
         last;
       }
