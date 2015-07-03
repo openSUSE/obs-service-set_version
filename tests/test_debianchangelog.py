@@ -55,6 +55,8 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
     )
     @unpack
     def test_from_commandline(self, spec_tags, new_version):
-        changelog_path = self._write_debian_changelog("8.8.8")
+        old_version = "8.8.8"
+        changelog_path = self._write_debian_changelog(old_version)
         self._run_set_version(params=['--version', new_version])
         self._check_file_assert_contains(changelog_path, new_version)
+        self._check_file_assert_not_contains(changelog_path, old_version)
