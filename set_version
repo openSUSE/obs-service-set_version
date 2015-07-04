@@ -88,7 +88,7 @@ unless ($version) {
   my @binsufs = qw{tar tar.gz tgz tar.bz2 tbz2 tar.xz zip};
   my $binsufsre = join('|', map {"\Q$_\E"} @binsufs);
   for my $name (@srcfiles) {
-    if ($name =~ /^$basename.*[-_]([\d].*)\.(?:$binsufsre)$/) {
+    if ($name =~ /^$basename.*[-_]v?([\d].*)\.(?:$binsufsre)$/) {
        $version=$1;
        last;
     }
@@ -104,7 +104,7 @@ unless ($version) {
        open( FH, "tar tf $name |" );
        my $line;
        while (defined($line = <FH>)) {
-         if ($line =~ /$basename.*[-_]([\d][^\/]*)\/.*/) {
+         if ($line =~ /$basename.*[-_]v?([\d][^\/]*)\/.*/) {
             $version=$1;
             last;
          }
