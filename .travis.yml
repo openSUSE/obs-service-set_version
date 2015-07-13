@@ -7,9 +7,15 @@ python:
   - "3.3"
   - "3.4"
 
+# see http://docs.travis-ci.com/user/apt/#Adding-APT-Packages for adding packages in a container build
+addons:
+    apt:
+      packages:
+        - devscripts
+
 install:
   - pip install flake8 ddt unittest2 --use-mirrors
 script:
-  - flake8 tests/
+  - flake8 set_version tests/
   - python -m unittest discover tests/
 

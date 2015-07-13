@@ -1,0 +1,6 @@
+[
+  ["testprog-1.2.3.tar", [], "1.2.3"],
+  ["testprog-1.2.3.tar", ["xyz-4.5.6"], "1.2.3"],
+  ["helloworld-1.2.3.tar", ["testprog-4.5.6"], "4.5.6"],
+  ["helloworld-1.2.3.tar", ["testprog-4.5.6", "another-testprog-7"], "4.5.6"]
+]

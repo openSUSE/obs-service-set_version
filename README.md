@@ -1,4 +1,4 @@
-# set_version (OBS source service)
+# set_version (OBS source service) [![Build Status](https://travis-ci.org/openSUSE/obs-service-set_version.svg?branch=master)](https://travis-ci.org/openSUSE/obs-service-set_version)
 
 This service updates a RPM spec or Debian changelog according to the existing files.
 The service can be used in combination with other services like [download_files](https://github.com/openSUSE/obs-service-download_files)
