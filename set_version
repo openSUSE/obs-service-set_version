@@ -108,6 +108,32 @@ class VersionDetector(object):
         return None
 
 
+class PackageTypeDetector(object):
+    @staticmethod
+    def _get_package_type(files):
+        pt_found = False
+        for f in filter(lambda x: x.endswith(suffixes), files):
+            pt_found = PackageTypeDetector._is_python(f)
+            if pt_found:
+                return "python"
+        # no package type found
+        return None
+
+    @staticmethod
+    def _is_python(f):
+        names = []
+        if tarfile.is_tarfile(f):
+            with tarfile.open(f) as tf:
+                names = tf.getnames()
+        if zipfile.is_zipfile(f):
+            with zipfile.ZipFile(f, 'r') as zf:
+                names = zf.namelist()
+        for n in map(lambda x: os.path.normpath(x), names):
+            if n.endswith("egg-info/PKG-INFO"):
+                return True
+        return False
+
+
 def _replace_tag(filename, tag, string):
     # first, modify a copy of filename and then move it
     filename_new = ".%s" % filename
