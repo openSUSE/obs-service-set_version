@@ -74,7 +74,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
     def test_from_tarball_with_single_file(self, data):
         tarball_name, tarball_dirs, expected_version = data
         spec_path = self._write_specfile("test.spec", {"Version": "UNKNOWN"})
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()
         self._check_file_assert_contains(spec_path, expected_version)
 
@@ -84,7 +84,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
         spec_path = []
         for s in filter(lambda x: x.endswith(".spec"), spec_files):
             spec_path.append(self._write_specfile(s, {"Version": "UNKNOWN"}))
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version(["--basename", "testprog"])
         for s in spec_path:
             self._check_file_assert_contains(s, expected_version)
@@ -93,6 +93,6 @@ class SetVersionSpecfile(SetVersionBaseTest):
     def test_from_tarball_with_basename(self, data):
         tarball_name, tarball_dirs, expected_version = data
         spec_path = self._write_specfile("test.spec", {"Version": "UNKNOWN"})
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version(["--basename", "testprog"])
         self._check_file_assert_contains(spec_path, expected_version)

@@ -58,13 +58,16 @@ class SetVersionBaseTest(unittest.TestCase):
         self.assertFalse(contains,
                          err_msg)
 
-    def _write_tarfile(self, tar_name, tar_dirs):
-        """write a tarfile with the given (empty) dirs"""
+    def _write_tarfile(self, tar_name, tar_dirs, tar_files):
+        """write a tarfile with the given dirs and given files"""
         tar_path = os.path.join(self._tmpdir, tar_name)
         with tarfile.open(tar_path, "w") as t:
             for d in tar_dirs:
                 td = tarfile.TarInfo(d)
                 td.type = tarfile.DIRTYPE
+                t.addfile(td)
+            for f in tar_files:
+                td = tarfile.TarInfo(f)
                 t.addfile(td)
         return tar_path
 
