@@ -35,62 +35,77 @@ def _get_local_files():
     return files
 
 
-def _get_version_via_filename(files, basename):
-    """ detect version based on file names"""
-    for f in files:
-        regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
-                                                 suffixes_re)
-        m = re.match(regex, f)
-        if m:
-            return m.group(1)
-    # Nothing found
-    return None
+class VersionDetector(object):
+    @staticmethod
+    def _autodetect(files, basename):
+        version = None
+        version = VersionDetector._get_version_via_filename(
+            files, basename)
+        if not version:
+            version = VersionDetector._get_version_via_archive_dirname(
+                files, basename)
+        if not version:
+            version = VersionDetector._get_version_via_debian_changelog(
+                "debian.changelog")
+        return version
 
+    @staticmethod
+    def _get_version_via_filename(files, basename):
+        """ detect version based on file names"""
+        for f in files:
+            regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
+                                                     suffixes_re)
+            m = re.match(regex, f)
+            if m:
+                return m.group(1)
+        # Nothing found
+        return None
 
-def _get_version(str_list, basename):
-    regex = "%s.*[-_]([\d][^\/]*).*" % basename
-    for s in str_list:
-        m = re.match(regex, s)
-        if m:
-            return m.group(1)
-    # Nothing found
-    return None
+    @staticmethod
+    def __get_version(str_list, basename):
+        regex = "%s.*[-_]([\d][^\/]*).*" % basename
+        for s in str_list:
+            m = re.match(regex, s)
+            if m:
+                return m.group(1)
+        # Nothing found
+        return None
 
+    @staticmethod
+    def _get_version_via_archive_dirname(files, basename):
+        """ detect version based tar'd directory name"""
+        for f in filter(lambda x: x.endswith(suffixes), files):
+            # handle tarfiles
+            if tarfile.is_tarfile(f):
+                with tarfile.open(f) as tf:
+                    v = VersionDetector.__get_version(tf.getnames(), basename)
+                    if v:
+                        return v
+            # handle zipfiles
+            if zipfile.is_zipfile(f):
+                with zipfile.ZipFile(f, 'r') as zf:
+                    v = VersionDetector.__get_version(zf.namelist(), basename)
+                    if v:
+                        return v
+        # Nothing found
+        return None
 
-def _get_version_via_archive_dirname(files, basename):
-    """ detect version based tar'd directory name"""
-    for f in filter(lambda x: x.endswith(suffixes), files):
-        # handle tarfiles
-        if tarfile.is_tarfile(f):
-            with tarfile.open(f) as tf:
-                v = _get_version(tf.getnames(), basename)
-                if v:
-                    return v
-        # handle zipfiles
-        if zipfile.is_zipfile(f):
-            with zipfile.ZipFile(f, 'r') as zf:
-                v = _get_version(zf.namelist(), basename)
-                if v:
-                    return v
-    # Nothing found
-    return None
-
-
-def _get_version_via_debian_changelog(filename):
-    # from http://anonscm.debian.org/cgit/pkg-python-debian/\
-    # python-debian.git/tree/lib/debian/changelog.py
-    topline = re.compile(r'^(\w%(name_chars)s*) \(([^\(\) \t]+)\)'
-                         '((\s+%(name_chars)s+)+)\;'
-                         % {'name_chars': '[-+0-9a-z.]'},
-                         re.IGNORECASE)
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
-            firstline = f.readline()
-            topmatch = topline.match(firstline)
-            if topmatch:
-                return topmatch.group(2)
-    # Nothing found
-    return None
+    @staticmethod
+    def _get_version_via_debian_changelog(filename):
+        # from http://anonscm.debian.org/cgit/pkg-python-debian/\
+            # python-debian.git/tree/lib/debian/changelog.py
+        topline = re.compile(r'^(\w%(name_chars)s*) \(([^\(\) \t]+)\)'
+                             '((\s+%(name_chars)s+)+)\;'
+                             % {'name_chars': '[-+0-9a-z.]'},
+                             re.IGNORECASE)
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                firstline = f.readline()
+                topmatch = topline.match(firstline)
+                if topmatch:
+                    return topmatch.group(2)
+        # Nothing found
+        return None
 
 
 def _replace_tag(filename, tag, string):
@@ -121,7 +136,8 @@ def _replace_debian_changelog_version(filename, version_new):
     filename_new = ".%s" % filename
     shutil.copy(filename, filename_new)
     # get current version
-    version_current = _get_version_via_debian_changelog(filename_new)
+    version_current = VersionDetector._get_version_via_debian_changelog(
+        filename_new)
     with open(filename_new, 'r+') as f:
         content_lines = f.readlines()
         f.seek(0)
@@ -155,13 +171,7 @@ if __name__ == '__main__':
     files_local = _get_local_files()
 
     if not version:
-        version = _get_version_via_filename(
-            files_local, args["basename"])
-    if not version:
-        version = _get_version_via_archive_dirname(
-            files_local, args["basename"])
-    if not version:
-        version = _get_version_via_debian_changelog("debian.changelog")
+        version = VersionDetector._autodetect(files_local, args["basename"])
 
     if not version:
         sys.exit(-1)
