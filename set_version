@@ -293,12 +293,26 @@ if __name__ == '__main__':
     # if no files explicitly specified process whole directory
     files = args['file'] or files_local
 
-    # handle rpm spec and debian dsc files
-    for f in filter(lambda x: x.endswith((".spec", ".dsc")), files):
-        _replace_tag(f, 'Version', version)
+    # do version convertion if needed
+    pack_type = PackageTypeDetector._get_package_type(files)
+    version_converted = None
+    if pack_type == "python":
+        version_converted = _version_python_pip2rpm(version)
+
+    # handle rpm specs
+    for f in filter(lambda x: x.endswith(".spec"), files):
+        if version_converted and version_converted != version:
+            _replace_tag(f, 'Version', version_converted)
+            _add_or_replace_define(f, "version_unconverted", version)
+            _replace_spec_setup(f, "version_unconverted")
+        else:
+            _replace_tag(f, 'Version', version)
         _replace_tag(f, 'Release', "0")
 
-    # update debian.changelog file
+    # handle debian packages
+    for f in filter(lambda x: x.endswith(".dsc"), files):
+        _replace_tag(f, 'Version', version)
+
     for f in filter(lambda x: x.endswith(("debian.changelog")), files):
         _replace_debian_changelog_version(f, version)
 
