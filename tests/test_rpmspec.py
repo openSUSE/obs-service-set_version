@@ -73,10 +73,15 @@ class SetVersionSpecfile(SetVersionBaseTest):
     @file_data("data_test_from_tarball_with_single_file.json")
     def test_from_tarball_with_single_file(self, data):
         tarball_name, tarball_dirs, expected_version = data
-        spec_path = self._write_specfile("test.spec", {"Version": "UNKNOWN"})
+        spec_path = self._write_specfile("test.spec",
+                                         {"Name": "foo",
+                                          "Version": "UNKNOWN",
+                                          "Group": "AnyGroup"})
         self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()
         self._check_file_assert_contains(spec_path, expected_version)
+        self._check_file_assert_contains(spec_path, "Name: foo")
+        self._check_file_assert_contains(spec_path, "Group: AnyGroup")
 
     @file_data("data_test_from_tarball_with_basename_with_multiple_files.json")
     def test_from_tarball_with_basename_with_multiple_files(self, data):

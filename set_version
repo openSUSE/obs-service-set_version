@@ -175,9 +175,10 @@ def _replace_tag(filename, tag, string):
                 r"{tag}={string}".format(tag=tag, string=string), contents)
         else:
             # keep inline macros for rpm
-            contents_new, subs = re.subn(r'^{tag}:(\s*)[^%]*'.format(tag=tag),
+            contents_new, subs = re.subn(r'^{tag}:(\s*)[^%].*'.format(tag=tag),
                                          r'{tag}:\g<1>{string}'.format(
-                                             tag=tag, string=string), contents)
+                                             tag=tag, string=string),
+                                         contents, flags=re.MULTILINE)
 
         if subs > 0:
             f.truncate()
