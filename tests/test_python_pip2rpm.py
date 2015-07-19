@@ -29,20 +29,47 @@ from test_base import SetVersionBaseTest
 sv = imp.load_source("set_version", "set_version")
 
 
-class ZypperVersionCompare(object):
-    """ class to compare version strings with zypper"""
+class VersionCompareBase(object):
     def __init__(self, version):
         self.version_str = version
 
     def __repr__(self):
         return self.version_str
 
+
+class ZypperVersionCompare(VersionCompareBase):
+    """ class to compare version strings with zypper"""
     def __cmp__(self, other):
         # zypper's return val is negative if v1 is older than v2.
         # See 'man zypper'
         ret = subprocess.check_output("zypper --terse versioncmp %s %s" % (
             self.version_str, other.version_str), shell=True)
         return int(ret)
+
+
+class DpkgVersionCompare(VersionCompareBase):
+    def __do_compare(self, other, op):
+        cmd = 'dpkg --compare-versions "%s" "%s" "%s"' % (
+            self.version_str, op, other.version_str)
+        ret = subprocess.call(cmd, shell=True)
+        if int(ret) == 0:
+            return True
+        return False
+
+    def __lt__(self, other):
+        return self.__do_compare(other, 'lt')
+
+    def __le__(self, other):
+        return self.__do_compare(other, 'le')
+
+    def __eq__(self, other):
+        return self.__do_compare(other, 'eq')
+
+    def __gt__(self, other):
+        return self.__do_compare(other, 'gt')
+
+    def __ge__(self, other):
+        return self.__do_compare(other, 'ge')
 
 
 @ddt
@@ -80,19 +107,28 @@ class VersionCompareTests(SetVersionBaseTest):
         # generate Zypper objects to be able to compare the strings
         v1_zypp = ZypperVersionCompare(v1_rpm)
         v2_zypp = ZypperVersionCompare(v2_rpm)
+        # generate dpkg objects to be able to compare the strings
+        v1_dpkg = DpkgVersionCompare(v1_rpm)
+        v2_dpkg = DpkgVersionCompare(v2_rpm)
         # compare version strings for pip and zypper
         for type_, vv1, vv2 in [('pip', v1_pip, v2_pip),
-                                ('zypper', v1_zypp, v2_zypp)]:
+                                ('zypper', v1_zypp, v2_zypp),
+                                ('dpkg', v1_dpkg, v2_dpkg)]:
             if op == '==':
-                self.assertEqual(vv1, vv2, type_)
+                self.assertEqual(vv1, vv2,
+                                 "%s: %s == %s" % (type_, vv1, vv2))
             elif op == '>':
-                self.assertGreater(vv1, vv2, type_)
+                self.assertGreater(vv1, vv2,
+                                   "%s: %s > %s" % (type_, vv1, vv2))
             elif op == '>=':
-                self.assertGreaterEqual(vv1, vv2, type_)
+                self.assertGreaterEqual(vv1, vv2,
+                                        "%s: %s >= %s" % (type_, vv1, vv2))
             elif op == '<':
-                self.assertLess(vv1, vv2, type_)
+                self.assertLess(vv1, vv2,
+                                "%s: %s < %s" % (type_, vv1, vv2))
             elif op == '<=':
-                self.assertLessEqual(vv1, vv2, type_)
+                self.assertLessEqual(vv1, vv2,
+                                     "%s: %s <= %s" % (type_, vv1, vv2))
             else:
                 raise Exception("Unknown operator '%s'" % op)
 

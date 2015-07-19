@@ -12,6 +12,7 @@ addons:
     apt:
       packages:
         - devscripts
+        - dpkg
 
 install:
   - pip install flake8 ddt unittest2 packaging --use-mirrors
