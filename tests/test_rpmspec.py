@@ -26,12 +26,15 @@ from test_base import SetVersionBaseTest
 class SetVersionSpecfile(SetVersionBaseTest):
     """Test set_version service for .spec files"""
 
-    def _write_specfile(self, spec_name, spec_tags):
-        """write a given filename with the given rpm tags"""
+    def _write_specfile(self, spec_name, spec_tags, custom=[]):
+        """write a given filename with the given rpm tags and custom
+        strings (i.e. '%define foo bar')"""
         spec_path = os.path.join(self._tmpdir, spec_name)
         with open(spec_path, "a") as f:
+            for c in custom:
+                f.write("%s\n" % c)
             for key, val in spec_tags.items():
-                f.write("%s: %s" % (key, val))
+                f.write("%s: %s\n" % (key, val))
             f.write("\n")
         return spec_path
 
