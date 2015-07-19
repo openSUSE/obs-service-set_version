@@ -188,3 +188,43 @@ class TestSetVersionBasics(SetVersionBaseTest):
             self.assertEqual(len(current_lines), len(expected_lines))
             for nbr, l in enumerate(current_lines):
                 self.assertEqual(l, expected_lines[nbr])
+
+    @data(
+        (
+            ["%setup -q -n %{component}-%{version}"],
+            ["%setup -q -n %{component}-%{version_unconverted}"],
+        ),
+        (
+            ["%setup -q -n %{component}-1.2.3"],
+            ["%setup -q -n %{component}-1.2.3"],
+        ),
+        (
+            ["%setup -q -n foobar-%{version}"],
+            ["%setup -q -n foobar-%{version_unconverted}"],
+        ),
+        (
+            ["%setup -q -n foobar-%{version}-bar"],
+            ["%setup -q -n foobar-%{version_unconverted}-bar"],
+        ),
+        (
+            ["foo", "%setup -q -n %{component}-%{version}", "bar"],
+            ["foo", "%setup -q -n %{component}-%{version_unconverted}", "bar"],
+        ),
+        (
+            ["foo", "%setup -q -n %{component}-%{version}", "bar"],
+            ["foo", "%setup -q -n %{component}-%{version_unconverted}", "bar"],
+        )
+    )
+    @unpack
+    def test_replace_spec_setup(self, lines, expected_lines):
+        fn = os.path.join(self._tmpdir, "test-file")
+        with open(fn, "w") as f:
+            f.write("\n".join(lines))
+        # do the replacement
+        sv._replace_spec_setup(os.path.basename(fn), "version_unconverted")
+        # check
+        with open(fn, "r") as f:
+            current_lines = f.read().split("\n")
+            self.assertEqual(len(current_lines), len(expected_lines))
+            for nbr, l in enumerate(current_lines):
+                self.assertEqual(l, expected_lines[nbr])

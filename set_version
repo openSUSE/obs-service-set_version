@@ -162,6 +162,25 @@ def _add_or_replace_define(filename, def_name, def_value):
     os.rename(filename_new, filename)
 
 
+def _replace_spec_setup(filename, version_define):
+    # first, modify a copy of filename and then move it
+    filename_new = ".%s" % filename
+    shutil.copy(filename, filename_new)
+    with open(filename_new, 'r+') as f:
+        contents = f.read()
+        f.seek(0)
+        # keep inline macros for rpm
+        contents_new, subs = re.subn(
+            r'^%setup(.*)%{version}(.*)$',
+            r'%setup\g<1>%{{{version_define}}}\g<2>'.format(
+                version_define=version_define),
+            contents, flags=re.MULTILINE)
+        if subs > 0:
+            f.truncate()
+            f.write(contents_new)
+    os.rename(filename_new, filename)
+
+
 def _replace_tag(filename, tag, string):
     # first, modify a copy of filename and then move it
     filename_new = ".%s" % filename
