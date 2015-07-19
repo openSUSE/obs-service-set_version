@@ -14,7 +14,7 @@ addons:
         - devscripts
 
 install:
-  - pip install flake8 ddt unittest2 --use-mirrors
+  - pip install flake8 ddt unittest2 packaging --use-mirrors
 script:
   - flake8 set_version tests/
   - python -m unittest discover tests/

@@ -22,6 +22,8 @@ import sys
 import tarfile
 import zipfile
 
+from packaging.version import LegacyVersion, Version, parse
+
 
 suffixes = ('tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz', 'zip')
 suffixes_re = "|".join(map(lambda x: re.escape(x), suffixes))
@@ -172,6 +174,46 @@ def _replace_debian_changelog_version(filename, version_new):
         f.truncate()
         f.writelines(content_lines)
     os.rename(filename_new, filename)
+
+
+def _version_python_pip2rpm(version_pip):
+    """generate a rpm compatible version from a python pip version"""
+    version_rpm = version_pip
+    v = parse(version_pip)
+    if isinstance(v, Version):
+        # this is a PEP440 conform version
+        # TODO(toabctl): there's a epoch in PEP440. Howto handle these without
+        # using rpm's epoch feature?
+        parts = []
+        # Release segment
+        parts.append(".".join(str(x) for x in v._version.release))
+
+        # Pre-release
+        if v._version.pre is not None:
+            parts.append("~")
+            parts.append("".join(str(x) for x in v._version.pre))
+
+        # Post-release
+        if v._version.post is not None:
+            parts.append(".post{0}".format(v._version.post[1]))
+
+        # Development release
+        if v._version.dev is not None:
+            if v._version.pre is None:
+                parts.append("~a0")
+            parts.append("~dev{0}".format(v._version.dev[1]))
+
+        # Local version segment
+        if v._version.local is not None:
+            parts.append(
+                "+{0}".format(".".join(str(x) for x in v._version.local))
+            )
+        version_rpm = "".join(parts)
+    elif isinstance(v, LegacyVersion):
+        # TODO(toabctl): handle setuptools style legacy version
+        pass
+
+    return version_rpm
 
 
 if __name__ == '__main__':

@@ -6,14 +6,22 @@ or [tar_scm](https://github.com/openSUSE/obs-service-tar_scm).
 This is the git repository for [openSUSE:Tools/obs-service-set_version](https://build.opensuse.org/package/show/openSUSE:Tools/obs-service-set_version).
 The authoritative source is https://github.com/openSUSE/obs-service-set_version
 
+## Dependencies
+Install the following deps:
+
+    zypper in python-packaging
+
+
 ## Test suite
 To run the full testsuite, some dependencies are needed:
 
     zypper in devscripts
 
-If the dependencies are not installed, some tests are skipped.
+If the dependencies are not installed, some tests are skipped. `zypper` itself
+is also needed for the tests with python packages and PEP440 compatible versions.
 
 To run the testsuite, execute:
 
     python -m unittest discover tests/
 
+The testrun may take some time.
