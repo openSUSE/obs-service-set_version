@@ -136,6 +136,32 @@ class PackageTypeDetector(object):
         return False
 
 
+def _add_or_replace_define(filename, def_name, def_value):
+    # first, modify a copy of filename and then move it
+    filename_new = ".%s" % filename
+    shutil.copy(filename, filename_new)
+    with open(filename_new, 'r+') as f:
+        contents = f.read()
+        f.seek(0)
+        contents_new, subs = re.subn(
+            r'^%define {def_name}(\s*)[^%].*'.format(
+                def_name=def_name),
+            r'%define {def_name}\g<1>{def_value}'.format(
+                def_name=def_name, def_value=def_value),
+            contents, flags=re.MULTILINE)
+        if subs == 0:
+            # seems there was no define. add new one before 'Name:'
+            contents_new, subs = re.subn(
+                r'^(Name:.*)$',
+                r'%define {def_name} {def_value}\n\n\g<1>'.format(
+                    def_name=def_name, def_value=def_value),
+                contents, flags=re.MULTILINE)
+
+        f.truncate()
+        f.write(contents_new)
+    os.rename(filename_new, filename)
+
+
 def _replace_tag(filename, tag, string):
     # first, modify a copy of filename and then move it
     filename_new = ".%s" % filename

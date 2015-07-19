@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,USA.
 
 
+import imp
 import os
 import re
 import shutil
@@ -22,6 +23,13 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+
+
+from ddt import data, ddt, unpack
+
+
+# NOTE(toabctl): Hack to import non-module file for testing
+sv = imp.load_source("set_version", "set_version")
 
 
 SET_VERSION_EXECUTABLE = os.path.abspath(
@@ -83,3 +91,100 @@ class SetVersionBaseTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self._tmpdir)
+
+
+@ddt
+class TestSetVersionBasics(SetVersionBaseTest):
+    @data(
+        (
+            ["%define version_unconverted 1.2.3"],
+            ["%define version_unconverted 4.5.6"],
+            "version_unconverted", "4.5.6"
+        ),
+        (
+            ["%define version_unconverted     1.2.3"],
+            ["%define version_unconverted     4.5.6"],
+            "version_unconverted", "4.5.6"
+        ),
+        (
+            ["Hi foo", "%define version_unconverted 1.2.3", "Ho bar"],
+            ["Hi foo", "%define version_unconverted 4.5.6", "Ho bar"],
+            "version_unconverted", "4.5.6"
+        ),
+        (
+            [
+                "%define foodef bar",
+                "%define version_unconverted 1.2.3",
+                "%define bardef foo"
+            ],
+            [
+                "%define foodef bar",
+                "%define version_unconverted 4.5.6",
+                "%define bardef foo"
+            ],
+            "version_unconverted", "4.5.6"
+        )
+    )
+    @unpack
+    def test_add_or_replace_define_replace(self, lines, expected_lines,
+                                           define_name, define_value):
+        fn = os.path.join(self._tmpdir, "test-file")
+        with open(fn, "w") as f:
+            f.write("\n".join(lines))
+        # do the replacement
+        sv._add_or_replace_define(os.path.basename(fn),
+                                  define_name, define_value)
+        # check
+        with open(fn, "r") as f:
+            current_lines = f.read().split("\n")
+            self.assertEqual(len(current_lines), len(expected_lines))
+            for nbr, l in enumerate(current_lines):
+                self.assertEqual(l, expected_lines[nbr])
+
+    @data(
+        (
+            ["Name: foobar"],
+            ["%define version_unconverted 4.5.6", "", "Name: foobar"],
+            "version_unconverted", "4.5.6"
+        ),
+        (
+            ["Name: foobar"],
+            ["%define version_unconverted 4.5.6", "", "Name: foobar"],
+            "version_unconverted", "4.5.6"
+        ),
+        (
+            ["AnyTag: ha", "Name: foo"],
+            [
+                "AnyTag: ha",
+                "%define version_unconverted 4.5.6",
+                "",
+                "Name: foo"
+            ],
+            "version_unconverted", "4.5.6"
+        ),
+        (
+            ["Name: foobar", "Version: 1.2.3"],
+            [
+                "%define version_unconverted 4.5.6",
+                "",
+                "Name: foobar",
+                "Version: 1.2.3"
+            ],
+            "version_unconverted", "4.5.6"
+        )
+    )
+    @unpack
+    def test_add_or_replace_define_add(self, lines, expected_lines,
+                                       define_name, define_value):
+        fn = os.path.join(self._tmpdir, "test-file")
+        with open(fn, "w") as f:
+            f.write("\n".join(lines))
+        # do the addition
+        sv._add_or_replace_define(os.path.basename(fn),
+                                  define_name, define_value)
+        # check
+        with open(fn, "r") as f:
+            current_lines = f.read().split("\n")
+            self.assertEqual(len(current_lines), len(expected_lines))
+            for nbr, l in enumerate(current_lines):
+                self.assertEqual(l, expected_lines[nbr])
