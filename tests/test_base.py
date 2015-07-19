@@ -20,6 +20,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -80,9 +81,12 @@ class SetVersionBaseTest(unittest.TestCase):
         return tar_path
 
     def _run_set_version(self, params=[]):
-        cmd = [SET_VERSION_EXECUTABLE, '--outdir', '.'] + params
+        cmd = [sys.executable,
+               SET_VERSION_EXECUTABLE,
+               '--outdir', '.'] + params
         try:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            subprocess.check_output(
+                cmd, stderr=subprocess.STDOUT, env=os.environ.copy())
         except subprocess.CalledProcessError as e:
             raise Exception(
                 "Can not call '%s' in dir '%s'. Error: %s" % ("".join(cmd),
