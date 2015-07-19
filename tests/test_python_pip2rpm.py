@@ -16,7 +16,9 @@
 
 
 import imp
+import os
 import subprocess
+import unittest
 
 from ddt import data, ddt, unpack
 
@@ -27,6 +29,30 @@ from test_base import SetVersionBaseTest
 
 # NOTE(toabctl): Hack to import non-module file for testing
 sv = imp.load_source("set_version", "set_version")
+
+
+def _has_zypper():
+    with open(os.devnull, 'w') as dn:
+        ret = subprocess.call("which zypper",
+                              stdout=dn, stderr=subprocess.STDOUT,
+                              shell=True)
+        if int(ret) == 0:
+            return True
+        return False
+
+
+def _has_dpkg():
+    with open(os.devnull, 'w') as dn:
+        ret = subprocess.call("which dpkg",
+                              stdout=dn, stderr=subprocess.STDOUT,
+                              shell=True)
+        if int(ret) == 0:
+            return True
+        return False
+
+
+HAS_ZYPPER = _has_zypper()
+HAS_DPKG = _has_dpkg()
 
 
 class VersionCompareBase(object):
@@ -94,6 +120,8 @@ class VersionConverterTest(SetVersionBaseTest):
 
 
 @ddt
+@unittest.skipIf(HAS_ZYPPER is False and HAS_DPKG is False,
+                 "zypper and dpkg are both unavailable")
 class VersionCompareTests(SetVersionBaseTest):
     def _do_version_compare(self, v1, op, v2):
         """ make sure that a version compare with pip and
@@ -104,16 +132,19 @@ class VersionCompareTests(SetVersionBaseTest):
         # generate rpm version strings
         v1_rpm = sv._version_python_pip2rpm(v1)
         v2_rpm = sv._version_python_pip2rpm(v2)
+        checked_package_managers = [('pip', v1_pip, v2_pip)]
         # generate Zypper objects to be able to compare the strings
-        v1_zypp = ZypperVersionCompare(v1_rpm)
-        v2_zypp = ZypperVersionCompare(v2_rpm)
+        if HAS_ZYPPER:
+            v1_zypp = ZypperVersionCompare(v1_rpm)
+            v2_zypp = ZypperVersionCompare(v2_rpm)
+            checked_package_managers.append(('zypper', v1_zypp, v2_zypp))
         # generate dpkg objects to be able to compare the strings
-        v1_dpkg = DpkgVersionCompare(v1_rpm)
-        v2_dpkg = DpkgVersionCompare(v2_rpm)
-        # compare version strings for pip and zypper
-        for type_, vv1, vv2 in [('pip', v1_pip, v2_pip),
-                                ('zypper', v1_zypp, v2_zypp),
-                                ('dpkg', v1_dpkg, v2_dpkg)]:
+        if HAS_DPKG:
+            v1_dpkg = DpkgVersionCompare(v1_rpm)
+            v2_dpkg = DpkgVersionCompare(v2_rpm)
+            checked_package_managers.append(('dpkg', v1_dpkg, v2_dpkg))
+        # compare version strings for pip, zypper and dpkg
+        for type_, vv1, vv2 in checked_package_managers:
             if op == '==':
                 self.assertEqual(vv1, vv2,
                                  "%s: %s == %s" % (type_, vv1, vv2))
