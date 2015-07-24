@@ -63,7 +63,7 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
         old_version = "8.8.8"
         changelog_path = self._write_debian_changelog(
             "debian.changelog", old_version)
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()
         self._check_file_assert_contains(changelog_path, expected_version)
         self._check_file_assert_not_contains(changelog_path, old_version)
@@ -77,7 +77,7 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
                         dchlog_files):
             dchlog_path.append(
                 self._write_debian_changelog(s, old_version))
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version(["--basename", "testprog"])
         for s in dchlog_path:
             self._check_file_assert_contains(s, expected_version)
@@ -89,7 +89,7 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
         old_version = "9.9.9-0+git3~10"
         dchlog_path = self._write_debian_changelog("debian.changelog",
                                                    old_version)
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version(["--basename", "testprog"])
         self._check_file_assert_contains(dchlog_path, expected_version)
         self._check_file_assert_not_contains(dchlog_path, old_version)

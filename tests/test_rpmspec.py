@@ -17,7 +17,7 @@
 
 import os
 
-from ddt import ddt, file_data
+from ddt import data, ddt, file_data, unpack
 
 from test_base import SetVersionBaseTest
 
@@ -26,12 +26,15 @@ from test_base import SetVersionBaseTest
 class SetVersionSpecfile(SetVersionBaseTest):
     """Test set_version service for .spec files"""
 
-    def _write_specfile(self, spec_name, spec_tags):
-        """write a given filename with the given rpm tags"""
+    def _write_specfile(self, spec_name, spec_tags, custom=[]):
+        """write a given filename with the given rpm tags and custom
+        strings (i.e. '%define foo bar')"""
         spec_path = os.path.join(self._tmpdir, spec_name)
         with open(spec_path, "a") as f:
+            for c in custom:
+                f.write("%s\n" % c)
             for key, val in spec_tags.items():
-                f.write("%s: %s" % (key, val))
+                f.write("%s: %s\n" % (key, val))
             f.write("\n")
         return spec_path
 
@@ -73,10 +76,15 @@ class SetVersionSpecfile(SetVersionBaseTest):
     @file_data("data_test_from_tarball_with_single_file.json")
     def test_from_tarball_with_single_file(self, data):
         tarball_name, tarball_dirs, expected_version = data
-        spec_path = self._write_specfile("test.spec", {"Version": "UNKNOWN"})
-        self._write_tarfile(tarball_name, tarball_dirs)
+        spec_path = self._write_specfile("test.spec",
+                                         {"Name": "foo",
+                                          "Version": "UNKNOWN",
+                                          "Group": "AnyGroup"})
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()
         self._check_file_assert_contains(spec_path, expected_version)
+        self._check_file_assert_contains(spec_path, "Name: foo")
+        self._check_file_assert_contains(spec_path, "Group: AnyGroup")
 
     @file_data("data_test_from_tarball_with_basename_with_multiple_files.json")
     def test_from_tarball_with_basename_with_multiple_files(self, data):
@@ -84,7 +92,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
         spec_path = []
         for s in filter(lambda x: x.endswith(".spec"), spec_files):
             spec_path.append(self._write_specfile(s, {"Version": "UNKNOWN"}))
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version(["--basename", "testprog"])
         for s in spec_path:
             self._check_file_assert_contains(s, expected_version)
@@ -93,6 +101,96 @@ class SetVersionSpecfile(SetVersionBaseTest):
     def test_from_tarball_with_basename(self, data):
         tarball_name, tarball_dirs, expected_version = data
         spec_path = self._write_specfile("test.spec", {"Version": "UNKNOWN"})
-        self._write_tarfile(tarball_name, tarball_dirs)
+        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version(["--basename", "testprog"])
         self._check_file_assert_contains(spec_path, expected_version)
+
+    @data(
+        (
+            "test.spec",
+            "test-master.tar", [],
+            ["test-5.0.0.0b2dev188/test.egg-info/PKG-INFO"],
+            "5.0.0.0b2dev188",
+            "5.0.0.0~b2~dev188"
+        )
+    )
+    @unpack
+    def test_python_package_from_tarball_with_single_file(
+            self, spec_file, tar_name, tar_dirs, tar_files,
+            org_version, conv_version):
+        spec_path = self._write_specfile(
+            spec_file, {"Name": "test",
+                        "Version": "UNKNOWN",
+                        "Group": "AnyGroup"},
+            ["%define foo bar"])
+        self._write_tarfile(tar_name, tar_dirs, tar_files)
+        self._run_set_version()
+        self._check_file_assert_contains(
+            spec_path, "Version: %s" % conv_version)
+        self._check_file_assert_contains(
+            spec_path, "define version_unconverted %s" % org_version)
+        self._check_file_assert_contains(
+            spec_path, "Name: test")
+        self._check_file_assert_contains(
+            spec_path, "Group: AnyGroup")
+        self._check_file_assert_contains(
+            spec_path, "%define foo bar")
+        self._check_file_assert_not_contains(spec_path, "UNKNOWN")
+
+    @data(
+        (
+            "test.spec",
+            [
+                "Version: 1.2.3",
+                "Name: test",
+                "%define component test",
+                "%setup -p -n %{component}-%{version}"
+            ],
+            [
+                "Version: 5.0.0.0~b2~dev188",
+                "%define version_unconverted 5.0.0.0b2dev188",
+                "",
+                "Name: test",
+                "%define component test",
+                "%setup -p -n %{component}-%{version_unconverted}"
+            ],
+            "test-master.tar",
+            [],
+            ["test-5.0.0.0b2dev188/test.egg-info/PKG-INFO"]
+        ),
+        (
+            "test.spec",
+            [
+                "Version: 1.2.3",
+                "Name: test",
+                "%define component version",
+                "%setup -p -n %{component}-%{version}-foobar"
+            ],
+            [
+                "Version: 5.0.0.0~b2~dev188",
+                "%define version_unconverted 5.0.0.0b2dev188",
+                "",
+                "Name: test",
+                "%define component version",
+                "%setup -p -n %{component}-%{version_unconverted}-foobar"
+            ],
+            "test-master.tar",
+            [],
+            ["test-5.0.0.0b2dev188/test.egg-info/PKG-INFO"]
+        )
+    )
+    @unpack
+    def test_python_package(
+            self, spec_file, spec_lines, expected_spec_lines,
+            tar_name, tar_dirs, tar_files):
+        fn = os.path.join(self._tmpdir, spec_file)
+        with open(fn, "w") as f:
+            f.write("\n".join(spec_lines))
+        self._write_tarfile(tar_name, tar_dirs, tar_files)
+        self._run_set_version()
+        # check
+        with open(fn, "r") as f:
+            current_lines = f.read().split("\n")
+            self.assertEqual(len(current_lines), len(expected_spec_lines))
+            for nbr, l in enumerate(current_lines):
+                self.assertEqual(l, expected_spec_lines[nbr])

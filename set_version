@@ -22,6 +22,8 @@ import sys
 import tarfile
 import zipfile
 
+from packaging.version import LegacyVersion, Version, parse
+
 
 suffixes = ('tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz', 'zip')
 suffixes_re = "|".join(map(lambda x: re.escape(x), suffixes))
@@ -35,62 +37,148 @@ def _get_local_files():
     return files
 
 
-def _get_version_via_filename(files, basename):
-    """ detect version based on file names"""
-    for f in files:
-        regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
-                                                 suffixes_re)
-        m = re.match(regex, f)
-        if m:
-            return m.group(1)
-    # Nothing found
-    return None
+class VersionDetector(object):
+    @staticmethod
+    def _autodetect(files, basename):
+        version = None
+        version = VersionDetector._get_version_via_filename(
+            files, basename)
+        if not version:
+            version = VersionDetector._get_version_via_archive_dirname(
+                files, basename)
+        if not version:
+            version = VersionDetector._get_version_via_debian_changelog(
+                "debian.changelog")
+        return version
+
+    @staticmethod
+    def _get_version_via_filename(files, basename):
+        """ detect version based on file names"""
+        for f in files:
+            regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
+                                                     suffixes_re)
+            m = re.match(regex, f)
+            if m:
+                return m.group(1)
+        # Nothing found
+        return None
+
+    @staticmethod
+    def __get_version(str_list, basename):
+        regex = "%s.*[-_]([\d][^\/]*).*" % basename
+        for s in str_list:
+            m = re.match(regex, s)
+            if m:
+                return m.group(1)
+        # Nothing found
+        return None
+
+    @staticmethod
+    def _get_version_via_archive_dirname(files, basename):
+        """ detect version based tar'd directory name"""
+        for f in filter(lambda x: x.endswith(suffixes), files):
+            # handle tarfiles
+            if tarfile.is_tarfile(f):
+                with tarfile.open(f) as tf:
+                    v = VersionDetector.__get_version(tf.getnames(), basename)
+                    if v:
+                        return v
+            # handle zipfiles
+            if zipfile.is_zipfile(f):
+                with zipfile.ZipFile(f, 'r') as zf:
+                    v = VersionDetector.__get_version(zf.namelist(), basename)
+                    if v:
+                        return v
+        # Nothing found
+        return None
+
+    @staticmethod
+    def _get_version_via_debian_changelog(filename):
+        # from http://anonscm.debian.org/cgit/pkg-python-debian/\
+            # python-debian.git/tree/lib/debian/changelog.py
+        topline = re.compile(r'^(\w%(name_chars)s*) \(([^\(\) \t]+)\)'
+                             '((\s+%(name_chars)s+)+)\;'
+                             % {'name_chars': '[-+0-9a-z.]'},
+                             re.IGNORECASE)
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                firstline = f.readline()
+                topmatch = topline.match(firstline)
+                if topmatch:
+                    return topmatch.group(2)
+        # Nothing found
+        return None
 
 
-def _get_version(str_list, basename):
-    regex = "%s.*[-_]([\d][^\/]*).*" % basename
-    for s in str_list:
-        m = re.match(regex, s)
-        if m:
-            return m.group(1)
-    # Nothing found
-    return None
+class PackageTypeDetector(object):
+    @staticmethod
+    def _get_package_type(files):
+        pt_found = False
+        for f in filter(lambda x: x.endswith(suffixes), files):
+            pt_found = PackageTypeDetector._is_python(f)
+            if pt_found:
+                return "python"
+        # no package type found
+        return None
 
-
-def _get_version_via_archive_dirname(files, basename):
-    """ detect version based tar'd directory name"""
-    for f in filter(lambda x: x.endswith(suffixes), files):
-        # handle tarfiles
+    @staticmethod
+    def _is_python(f):
+        names = []
         if tarfile.is_tarfile(f):
             with tarfile.open(f) as tf:
-                v = _get_version(tf.getnames(), basename)
-                if v:
-                    return v
-        # handle zipfiles
+                names = tf.getnames()
         if zipfile.is_zipfile(f):
             with zipfile.ZipFile(f, 'r') as zf:
-                v = _get_version(zf.namelist(), basename)
-                if v:
-                    return v
-    # Nothing found
-    return None
+                names = zf.namelist()
+        for n in map(lambda x: os.path.normpath(x), names):
+            if n.endswith("egg-info/PKG-INFO"):
+                return True
+        return False
 
 
-def _get_version_via_debian_changelog(filename):
-    # from http://anonscm.debian.org/cgit/pkg-python-debian/\
-    # python-debian.git/tree/lib/debian/changelog.py
-    topline = re.compile(r'^(\w%(name_chars)s*) \(([^\(\) \t]+)\)'
-                         '((\s+%(name_chars)s+)+)\;'
-                         % {'name_chars': '[-+0-9a-z.]'},
-                         re.IGNORECASE)
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
-            firstline = f.readline()
-            topmatch = topline.match(firstline)
-            if topmatch:
-                return topmatch.group(2)
-    # Nothing found
-    return None
+def _add_or_replace_define(filename, def_name, def_value):
+    # first, modify a copy of filename and then move it
+    filename_new = ".%s" % filename
+    shutil.copy(filename, filename_new)
+    with open(filename_new, 'r+') as f:
+        contents = f.read()
+        f.seek(0)
+        contents_new, subs = re.subn(
+            r'^%define {def_name}(\s*)[^%].*'.format(
+                def_name=def_name),
+            r'%define {def_name}\g<1>{def_value}'.format(
+                def_name=def_name, def_value=def_value),
+            contents, flags=re.MULTILINE)
+        if subs == 0:
+            # seems there was no define. add new one before 'Name:'
+            contents_new, subs = re.subn(
+                r'^(Name:.*)$',
+                r'%define {def_name} {def_value}\n\n\g<1>'.format(
+                    def_name=def_name, def_value=def_value),
+                contents, flags=re.MULTILINE)
+
+        f.truncate()
+        f.write(contents_new)
+    os.rename(filename_new, filename)
+
+
+def _replace_spec_setup(filename, version_define):
+    # first, modify a copy of filename and then move it
+    filename_new = ".%s" % filename
+    shutil.copy(filename, filename_new)
+    with open(filename_new, 'r+') as f:
+        contents = f.read()
+        f.seek(0)
+        # keep inline macros for rpm
+        contents_new, subs = re.subn(
+            r'^%setup(.*)%{version}(.*)$',
+            r'%setup\g<1>%{{{version_define}}}\g<2>'.format(
+                version_define=version_define),
+            contents, flags=re.MULTILINE)
+        if subs > 0:
+            f.truncate()
+            f.write(contents_new)
+    os.rename(filename_new, filename)
 
 
 def _replace_tag(filename, tag, string):
@@ -106,9 +194,10 @@ def _replace_tag(filename, tag, string):
                 r"{tag}={string}".format(tag=tag, string=string), contents)
         else:
             # keep inline macros for rpm
-            contents_new, subs = re.subn(r'^{tag}:(\s*)[^%]*'.format(tag=tag),
+            contents_new, subs = re.subn(r'^{tag}:(\s*)[^%].*'.format(tag=tag),
                                          r'{tag}:\g<1>{string}'.format(
-                                             tag=tag, string=string), contents)
+                                             tag=tag, string=string),
+                                         contents, flags=re.MULTILINE)
 
         if subs > 0:
             f.truncate()
@@ -121,7 +210,8 @@ def _replace_debian_changelog_version(filename, version_new):
     filename_new = ".%s" % filename
     shutil.copy(filename, filename_new)
     # get current version
-    version_current = _get_version_via_debian_changelog(filename_new)
+    version_current = VersionDetector._get_version_via_debian_changelog(
+        filename_new)
     with open(filename_new, 'r+') as f:
         content_lines = f.readlines()
         f.seek(0)
@@ -130,6 +220,46 @@ def _replace_debian_changelog_version(filename, version_new):
         f.truncate()
         f.writelines(content_lines)
     os.rename(filename_new, filename)
+
+
+def _version_python_pip2rpm(version_pip):
+    """generate a rpm compatible version from a python pip version"""
+    version_rpm = version_pip
+    v = parse(version_pip)
+    if isinstance(v, Version):
+        # this is a PEP440 conform version
+        # TODO(toabctl): there's a epoch in PEP440. Howto handle these without
+        # using rpm's epoch feature?
+        parts = []
+        # Release segment
+        parts.append(".".join(str(x) for x in v._version.release))
+
+        # Pre-release
+        if v._version.pre is not None:
+            parts.append("~")
+            parts.append("".join(str(x) for x in v._version.pre))
+
+        # Post-release
+        if v._version.post is not None:
+            parts.append(".post{0}".format(v._version.post[1]))
+
+        # Development release
+        if v._version.dev is not None:
+            if v._version.pre is None:
+                parts.append("~a0")
+            parts.append("~dev{0}".format(v._version.dev[1]))
+
+        # Local version segment
+        if v._version.local is not None:
+            parts.append(
+                "+{0}".format(".".join(str(x) for x in v._version.local))
+            )
+        version_rpm = "".join(parts)
+    elif isinstance(v, LegacyVersion):
+        # TODO(toabctl): handle setuptools style legacy version
+        pass
+
+    return version_rpm
 
 
 if __name__ == '__main__':
@@ -155,13 +285,7 @@ if __name__ == '__main__':
     files_local = _get_local_files()
 
     if not version:
-        version = _get_version_via_filename(
-            files_local, args["basename"])
-    if not version:
-        version = _get_version_via_archive_dirname(
-            files_local, args["basename"])
-    if not version:
-        version = _get_version_via_debian_changelog("debian.changelog")
+        version = VersionDetector._autodetect(files_local, args["basename"])
 
     if not version:
         sys.exit(-1)
@@ -169,12 +293,26 @@ if __name__ == '__main__':
     # if no files explicitly specified process whole directory
     files = args['file'] or files_local
 
-    # handle rpm spec and debian dsc files
-    for f in filter(lambda x: x.endswith((".spec", ".dsc")), files):
-        _replace_tag(f, 'Version', version)
+    # do version convertion if needed
+    pack_type = PackageTypeDetector._get_package_type(files)
+    version_converted = None
+    if pack_type == "python":
+        version_converted = _version_python_pip2rpm(version)
+
+    # handle rpm specs
+    for f in filter(lambda x: x.endswith(".spec"), files):
+        if version_converted and version_converted != version:
+            _replace_tag(f, 'Version', version_converted)
+            _add_or_replace_define(f, "version_unconverted", version)
+            _replace_spec_setup(f, "version_unconverted")
+        else:
+            _replace_tag(f, 'Version', version)
         _replace_tag(f, 'Release', "0")
 
-    # update debian.changelog file
+    # handle debian packages
+    for f in filter(lambda x: x.endswith(".dsc"), files):
+        _replace_tag(f, 'Version', version)
+
     for f in filter(lambda x: x.endswith(("debian.changelog")), files):
         _replace_debian_changelog_version(f, version)
 
