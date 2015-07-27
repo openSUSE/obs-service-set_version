@@ -22,7 +22,15 @@ import sys
 import tarfile
 import zipfile
 
-from packaging.version import LegacyVersion, Version, parse
+try:
+    from packaging.version import LegacyVersion, Version, parse
+except:
+    HAS_PACKAGING = False
+    import warnings
+    warnings.warn("install 'packaging' to improve python package versions",
+                  RuntimeWarning)
+else:
+    HAS_PACKAGING = True
 
 
 suffixes = ('tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz', 'zip')
@@ -225,6 +233,9 @@ def _replace_debian_changelog_version(filename, version_new):
 def _version_python_pip2rpm(version_pip):
     """generate a rpm compatible version from a python pip version"""
     version_rpm = version_pip
+    if not HAS_PACKAGING:
+        return version_rpm
+
     v = parse(version_pip)
     if isinstance(v, Version):
         # this is a PEP440 conform version
