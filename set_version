@@ -177,12 +177,19 @@ def _replace_spec_setup(filename, version_define):
     with open(filename_new, 'r+') as f:
         contents = f.read()
         f.seek(0)
-        # keep inline macros for rpm
+        # %setup without "-n" uses implicit "-n" as "%{name}-%{version}"
         contents_new, subs = re.subn(
-            r'^%setup(.*)%{version}(.*)$',
-            r'%setup\g<1>%{{{version_define}}}\g<2>'.format(
+            r'^%setup\s*((?:-q)?)?\s*$',
+            r'%setup \1 -n %{{name}}-%{{{version_define}}}'.format(
                 version_define=version_define),
             contents, flags=re.MULTILINE)
+        if subs == 0:
+            # keep inline macros for rpm
+            contents_new, subs = re.subn(
+                r'^%setup(.*)%{version}(.*)$',
+                r'%setup\g<1>%{{{version_define}}}\g<2>'.format(
+                    version_define=version_define),
+                contents, flags=re.MULTILINE)
         if subs > 0:
             f.truncate()
             f.write(contents_new)

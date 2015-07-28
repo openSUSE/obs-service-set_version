@@ -217,6 +217,14 @@ class TestSetVersionBasics(SetVersionBaseTest):
         (
             ["foo", "%setup -q -n %{component}-%{version}", "bar"],
             ["foo", "%setup -q -n %{component}-%{version_unconverted}", "bar"],
+        ),
+        (
+            ["foo", "%setup -q", "bar"],
+            ["foo", "%setup -q -n %{name}-%{version_unconverted}", "bar"],
+        ),
+        (
+            ["foo", "%setup", "bar"],
+            ["foo", "%setup  -n %{name}-%{version_unconverted}", "bar"],
         )
     )
     @unpack
