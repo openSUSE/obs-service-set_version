@@ -33,6 +33,7 @@ else:
     HAS_PACKAGING = True
 
 
+outdir = None
 suffixes = ('tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz', 'zip')
 suffixes_re = "|".join(map(lambda x: re.escape(x), suffixes))
 
@@ -146,9 +147,7 @@ class PackageTypeDetector(object):
 
 def _add_or_replace_define(filename, def_name, def_value):
     # first, modify a copy of filename and then move it
-    filename_new = ".%s" % filename
-    shutil.copy(filename, filename_new)
-    with open(filename_new, 'r+') as f:
+    with open(filename, 'r+') as f:
         contents = f.read()
         f.seek(0)
         contents_new, subs = re.subn(
@@ -167,14 +166,11 @@ def _add_or_replace_define(filename, def_name, def_value):
 
         f.truncate()
         f.write(contents_new)
-    os.rename(filename_new, filename)
 
 
 def _replace_spec_setup(filename, version_define):
     # first, modify a copy of filename and then move it
-    filename_new = ".%s" % filename
-    shutil.copy(filename, filename_new)
-    with open(filename_new, 'r+') as f:
+    with open(filename, 'r+') as f:
         contents = f.read()
         f.seek(0)
         # %setup without "-n" uses implicit "-n" as "%{name}-%{version}"
@@ -193,14 +189,11 @@ def _replace_spec_setup(filename, version_define):
         if subs > 0:
             f.truncate()
             f.write(contents_new)
-    os.rename(filename_new, filename)
 
 
 def _replace_tag(filename, tag, string):
     # first, modify a copy of filename and then move it
-    filename_new = ".%s" % filename
-    shutil.copy(filename, filename_new)
-    with open(filename_new, 'r+') as f:
+    with open(filename, 'r+') as f:
         contents = f.read()
         f.seek(0)
         if filename.endswith("PKGBUILD"):
@@ -217,24 +210,20 @@ def _replace_tag(filename, tag, string):
         if subs > 0:
             f.truncate()
             f.write(contents_new)
-    os.rename(filename_new, filename)
 
 
 def _replace_debian_changelog_version(filename, version_new):
     # first, modify a copy of filename and then move it
-    filename_new = ".%s" % filename
-    shutil.copy(filename, filename_new)
     # get current version
     version_current = VersionDetector._get_version_via_debian_changelog(
-        filename_new)
-    with open(filename_new, 'r+') as f:
+        filename)
+    with open(filename, 'r+') as f:
         content_lines = f.readlines()
         f.seek(0)
         content_lines[0] = content_lines[0].replace(
             version_current, version_new, 1)
         f.truncate()
         f.writelines(content_lines)
-    os.rename(filename_new, filename)
 
 
 def _version_python_pip2rpm(version_pip):
@@ -302,6 +291,12 @@ if __name__ == '__main__':
 
     files_local = _get_local_files()
 
+    outdir = args['outdir']
+
+    if not outdir:
+        print "no outdir specified"
+        sys.exit(-1)
+
     if not version:
         version = VersionDetector._autodetect(files_local, args["basename"])
 
@@ -319,22 +314,30 @@ if __name__ == '__main__':
 
     # handle rpm specs
     for f in filter(lambda x: x.endswith(".spec"), files):
+        filename = outdir + "/" + f
+        shutil.copyfile(f, filename)
         if version_converted and version_converted != version:
-            _replace_tag(f, 'Version', version_converted)
-            _add_or_replace_define(f, "version_unconverted", version)
-            _replace_spec_setup(f, "version_unconverted")
+            _replace_tag(filename, 'Version', version_converted)
+            _add_or_replace_define(filename, "version_unconverted", version)
+            _replace_spec_setup(filename, "version_unconverted")
         else:
-            _replace_tag(f, 'Version', version)
-        _replace_tag(f, 'Release', "0")
+            _replace_tag(filename, 'Version', version)
+        _replace_tag(filename, 'Release', "0")
 
     # handle debian packages
     for f in filter(lambda x: x.endswith(".dsc"), files):
-        _replace_tag(f, 'Version', version)
+        filename = outdir + "/" + f
+        shutil.copyfile(f, filename)
+        _replace_tag(filename, 'Version', version)
 
     for f in filter(lambda x: x.endswith(("debian.changelog")), files):
-        _replace_debian_changelog_version(f, version)
+        filename = outdir + "/" + f
+        shutil.copyfile(f, filename)
+        _replace_debian_changelog_version(filename, version)
 
     # handle arch linux PKGBUILD files
     # TODO: Handle the md5sums generation!
     for f in filter(lambda x: x.endswith(("PKGBUILD")), files):
-        _replace_tag(f, "md5sums", "(SKIP)")
+        filename = outdir + "/" + f
+        shutil.copyfile(f, filename)
+        _replace_tag(filename, "md5sums", "(SKIP)")
