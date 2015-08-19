@@ -81,12 +81,18 @@ class SetVersionBaseTest(unittest.TestCase):
         return tar_path
 
     def _run_set_version(self, params=[]):
+        self._tmpoutdir = tempfile.mkdtemp(prefix='obs-service-set_version-test-outdir-')
         cmd = [sys.executable,
                SET_VERSION_EXECUTABLE,
-               '--outdir', '.'] + params
+               '--outdir', self._tmpoutdir] + params
         try:
             subprocess.check_output(
                 cmd, stderr=subprocess.STDOUT, env=os.environ.copy())
+            for f in os.listdir(self._tmpoutdir):
+                os.unlink(self._tmpdir+"/"+f)
+                # FIXME: in most modes the files get not replaced, but store in parallel with _service: prefix
+                shutil.move(self._tmpoutdir+"/"+f, self._tmpdir)
+            shutil.rmtree(self._tmpoutdir)
         except subprocess.CalledProcessError as e:
             raise Exception(
                 "Can not call '%s' in dir '%s'. Error: %s" % ("".join(cmd),
