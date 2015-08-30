@@ -49,8 +49,7 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
 
     @file_data("data_test_from_commandline.json")
     def test_from_commandline(self, data):
-        spec_tags, new_version = data
-        old_version = "8.8.8"
+        old_version, new_version = data
         changelog_path = self._write_debian_changelog(
             "debian.changelog", old_version)
         self._run_set_version(params=['--version', new_version])

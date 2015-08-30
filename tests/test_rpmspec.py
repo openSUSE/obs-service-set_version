@@ -40,8 +40,8 @@ class SetVersionSpecfile(SetVersionBaseTest):
 
     @file_data("data_test_from_commandline.json")
     def test_from_commandline(self, data):
-        spec_tags, new_version = data
-        spec_path = self._write_specfile("test.spec", spec_tags)
+        old_version, new_version = data
+        spec_path = self._write_specfile("test.spec", {"Version": old_version})
         self._run_set_version(params=['--version', new_version])
         self._check_file_assert_contains(spec_path, new_version)
 
