@@ -12,6 +12,7 @@
 # of the License, or (at your option) any later version.
 # See http://www.gnu.org/licenses/gpl-2.0.html for full license text.
 
+from __future__ import print_function
 
 import argparse
 import glob
@@ -295,7 +296,7 @@ if __name__ == '__main__':
     outdir = args['outdir']
 
     if not outdir:
-        print "no outdir specified"
+        print("no outdir specified")
         sys.exit(-1)
 
     if not version:
