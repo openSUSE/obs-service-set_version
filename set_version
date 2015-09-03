@@ -12,6 +12,7 @@
 # of the License, or (at your option) any later version.
 # See http://www.gnu.org/licenses/gpl-2.0.html for full license text.
 
+from __future__ import print_function
 
 import argparse
 import glob
@@ -199,7 +200,8 @@ def _replace_tag(filename, tag, string):
         if filename.endswith("PKGBUILD"):
             contents_new, subs = re.subn(
                 r"^{tag}=.*".format(tag=tag),
-                r"{tag}={string}".format(tag=tag, string=string), contents)
+                r"{tag}={string}".format(tag=tag, string=string), contents,
+                flags=re.MULTILINE)
         else:
             # keep inline macros for rpm
             contents_new, subs = re.subn(r'^{tag}:(\s*)[^%].*'.format(tag=tag),
@@ -294,7 +296,7 @@ if __name__ == '__main__':
     outdir = args['outdir']
 
     if not outdir:
-        print "no outdir specified"
+        print("no outdir specified")
         sys.exit(-1)
 
     if not version:
@@ -340,4 +342,6 @@ if __name__ == '__main__':
     for f in filter(lambda x: x.endswith(("PKGBUILD")), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
-        _replace_tag(filename, "md5sums", "(SKIP)")
+        _replace_tag(filename, "md5sums", "('SKIP')")
+        _replace_tag(filename, "pkgver", version)
+        _replace_tag(filename, "pkgrel", "0")
