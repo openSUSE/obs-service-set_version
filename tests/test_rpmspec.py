@@ -75,10 +75,10 @@ class SetVersionSpecfile(SetVersionBaseTest):
 
     @file_data("data_test_from_tarball_with_single_file.json")
     def test_from_tarball_with_single_file(self, data):
-        tarball_name, tarball_dirs, expected_version = data
+        tarball_name, tarball_dirs, old_version, expected_version = data
         spec_path = self._write_specfile("test.spec",
                                          {"Name": "foo",
-                                          "Version": "UNKNOWN",
+                                          "Version": old_version,
                                           "Group": "AnyGroup"})
         self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()

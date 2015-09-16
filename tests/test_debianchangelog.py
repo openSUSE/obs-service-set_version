@@ -58,8 +58,7 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
 
     @file_data("data_test_from_tarball_with_single_file.json")
     def test_from_tarball_with_single_file(self, data):
-        tarball_name, tarball_dirs, expected_version = data
-        old_version = "8.8.8"
+        tarball_name, tarball_dirs, old_version, expected_version = data
         changelog_path = self._write_debian_changelog(
             "debian.changelog", old_version)
         self._write_tarfile(tarball_name, tarball_dirs, [])
