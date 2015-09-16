@@ -42,6 +42,9 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
     """Test set_version service for debian/changelog files"""
 
     def _write_debian_changelog(self, filename, version):
+        # debian changelogs can't be created with empty versions
+        if not version.strip():
+            version = "0~0"
         subprocess.check_call("dch --create --empty -v "
                               "%s --package foobar -c %s" %
                               (version, filename), shell=True)
@@ -64,7 +67,8 @@ class SetVersionDebianChangelog(SetVersionBaseTest):
         self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()
         self._check_file_assert_contains(changelog_path, expected_version)
-        self._check_file_assert_not_contains(changelog_path, old_version)
+        if old_version.strip():
+            self._check_file_assert_not_contains(changelog_path, old_version)
 
     @file_data("data_test_from_tarball_with_basename_with_multiple_files.json")
     def test_from_tarball_with_basename_with_multiple_files(self, data):
