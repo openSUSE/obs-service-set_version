@@ -204,11 +204,11 @@ def _replace_tag(filename, tag, string):
                 flags=re.MULTILINE)
         else:
             # keep inline macros for rpm
-            contents_new, subs = re.subn(r'^{tag}:(\s*)[^%].*'.format(tag=tag),
-                                         r'{tag}:\g<1>{string}'.format(
-                                             tag=tag, string=string),
-                                         contents, flags=re.MULTILINE)
-
+            contents_new, subs = re.subn(
+                r'^{tag}:([ \t\f\v]*)[^%\n\r]*'.format(tag=tag),
+                r'{tag}:\g<1>{string}'.format(
+                    tag=tag, string=string),
+                contents, flags=re.MULTILINE)
         if subs > 0:
             f.truncate()
             f.write(contents_new)
