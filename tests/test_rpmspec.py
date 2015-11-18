@@ -177,6 +177,20 @@ class SetVersionSpecfile(SetVersionBaseTest):
             "test-master.tar",
             [],
             ["test-5.0.0.0b2dev188/test.egg-info/PKG-INFO"]
+        ),
+        (
+            "test.spec",
+            [
+                "Version: 5.0.0.0~b2~dev188",
+                "%define version_unconverted 5.0.0.0b2dev188",
+            ],
+            [
+                "Version: 5.1.0",
+                "%define version_unconverted 5.1.0",
+            ],
+            "test-master.tar",
+            [],
+            ["test-5.1.0/test.egg-info/PKG-INFO"]
         )
     )
     @unpack
