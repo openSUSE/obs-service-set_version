@@ -318,9 +318,9 @@ if __name__ == '__main__':
     for f in filter(lambda x: x.endswith(".spec"), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
+        _add_or_replace_define(filename, "version_unconverted", version)
         if version_converted and version_converted != version:
             _replace_tag(filename, 'Version', version_converted)
-            _add_or_replace_define(filename, "version_unconverted", version)
             _replace_spec_setup(filename, "version_unconverted")
         else:
             _replace_tag(filename, 'Version', version)
