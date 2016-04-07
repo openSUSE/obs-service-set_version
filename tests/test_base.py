@@ -138,14 +138,14 @@ class TestSetVersionBasics(SetVersionBaseTest):
         )
     )
     @unpack
-    def test_add_or_replace_define_replace(self, lines, expected_lines,
-                                           define_name, define_value):
+    def test_replace_define_replace(self, lines, expected_lines,
+                                    define_name, define_value):
         fn = os.path.join(self._tmpdir, "test-file")
         with open(fn, "w") as f:
             f.write("\n".join(lines))
         # do the replacement
-        sv._add_or_replace_define(os.path.basename(fn),
-                                  define_name, define_value)
+        sv._replace_define(os.path.basename(fn),
+                           define_name, define_value)
         # check
         with open(fn, "r") as f:
             current_lines = f.read().split("\n")
@@ -186,14 +186,14 @@ class TestSetVersionBasics(SetVersionBaseTest):
         )
     )
     @unpack
-    def test_add_or_replace_define_add(self, lines, expected_lines,
-                                       define_name, define_value):
+    def test_replace_define_add(self, lines, expected_lines,
+                                define_name, define_value):
         fn = os.path.join(self._tmpdir, "test-file")
         with open(fn, "w") as f:
             f.write("\n".join(lines))
         # do the addition
-        sv._add_or_replace_define(os.path.basename(fn),
-                                  define_name, define_value)
+        sv._replace_define(os.path.basename(fn),
+                           define_name, define_value)
         # check
         with open(fn, "r") as f:
             current_lines = f.read().split("\n")

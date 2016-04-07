@@ -191,7 +191,25 @@ class SetVersionSpecfile(SetVersionBaseTest):
             "test-master.tar",
             [],
             ["test-5.1.0/test.egg-info/PKG-INFO"]
-        )
+        ),
+        (
+            "test.spec",
+            [
+                "Version: 1.2.3",
+                "Name: test",
+                "%define component test",
+                "%setup -p -n %{component}-%{version}"
+            ],
+            [
+                "Version: 5.0.0",
+                "Name: test",
+                "%define component test",
+                "%setup -p -n %{component}-%{version}"
+            ],
+            "test-master.tar",
+            [],
+            ["test-5.0.0/test.egg-info/PKG-INFO"]
+        ),
     )
     @unpack
     def test_python_package(
