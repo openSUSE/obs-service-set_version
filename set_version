@@ -146,7 +146,7 @@ class PackageTypeDetector(object):
         return False
 
 
-def _add_or_replace_define(filename, def_name, def_value):
+def _replace_define(filename, def_name, def_value, add_if_missing=True):
     # first, modify a copy of filename and then move it
     with open(filename, 'r+') as f:
         contents = f.read()
@@ -157,7 +157,7 @@ def _add_or_replace_define(filename, def_name, def_value):
             r'%define {def_name}\g<1>{def_value}'.format(
                 def_name=def_name, def_value=def_value),
             contents, flags=re.MULTILINE)
-        if subs == 0:
+        if subs == 0 and add_if_missing:
             # seems there was no define. add new one before 'Name:'
             contents_new, subs = re.subn(
                 r'^(Name:.*)$',
@@ -318,8 +318,10 @@ if __name__ == '__main__':
     for f in filter(lambda x: x.endswith(".spec"), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
-        _add_or_replace_define(filename, "version_unconverted", version)
+        _replace_define(filename, "version_unconverted", version,
+                        add_if_missing=False)
         if version_converted and version_converted != version:
+            _replace_define(filename, "version_unconverted", version)
             _replace_tag(filename, 'Version', version_converted)
             _replace_spec_setup(filename, "version_unconverted")
         else:
