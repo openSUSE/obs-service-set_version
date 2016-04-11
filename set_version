@@ -65,7 +65,7 @@ class VersionDetector(object):
     def _get_version_via_filename(files, basename):
         """ detect version based on file names"""
         for f in files:
-            regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
+            regex = r"^%s.*[-_]v?([\d].*)\.(?:%s)$" % (re.escape(basename),
                                                      suffixes_re)
             m = re.match(regex, f)
             if m:
