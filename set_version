@@ -50,11 +50,10 @@ def _get_local_files():
 class VersionDetector(object):
     @staticmethod
     def _autodetect(files, basename):
-        version = None
-        version = VersionDetector._get_version_via_filename(
+        version = VersionDetector._get_version_via_archive_dirname(
             files, basename)
         if not version:
-            version = VersionDetector._get_version_via_archive_dirname(
+            version = VersionDetector._get_version_via_filename(
                 files, basename)
         if not version:
             version = VersionDetector._get_version_via_debian_changelog(
