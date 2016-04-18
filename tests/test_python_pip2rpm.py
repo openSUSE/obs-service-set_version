@@ -271,4 +271,5 @@ class VersionCompareTests(SetVersionBaseTest):
     def test_version_ordering(self, version_chain, op):
         """ version order should be same between pip and zypper"""
         for i, _ in enumerate(version_chain[:-1]):
-            self._do_version_compare(version_chain[i], op, version_chain[i+1])
+            self._do_version_compare(version_chain[i], op,
+                                     version_chain[i + 1])

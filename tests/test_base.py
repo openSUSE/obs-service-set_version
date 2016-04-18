@@ -90,10 +90,10 @@ class SetVersionBaseTest(unittest.TestCase):
             subprocess.check_output(
                 cmd, stderr=subprocess.STDOUT, env=os.environ.copy())
             for f in os.listdir(self._tmpoutdir):
-                os.unlink(self._tmpdir+"/"+f)
+                os.unlink(self._tmpdir + "/" + f)
                 # FIXME: in most modes the files get not replaced,
                 # but store in parallel with _service: prefix
-                shutil.move(self._tmpoutdir+"/"+f, self._tmpdir)
+                shutil.move(self._tmpoutdir + "/" + f, self._tmpdir)
             shutil.rmtree(self._tmpoutdir)
         except subprocess.CalledProcessError as e:
             raise Exception(
