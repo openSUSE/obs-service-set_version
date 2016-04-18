@@ -1,12 +1,6 @@
 # Docker Infrastructure (see http://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/ )
 sudo: false
 
-language: python
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-
 # see http://docs.travis-ci.com/user/apt/#Adding-APT-Packages for adding packages in a container build
 addons:
     apt:
@@ -14,9 +8,17 @@ addons:
         - devscripts
         - dpkg
 
-install:
-  - pip install flake8 ddt unittest2 packaging --use-mirrors
-script:
-  - flake8 set_version tests/
-  - python -m unittest discover tests/
+language: python
+matrix:
+  include:
+    - python: 2.7
+      env: TOX_ENV=pep8
+    - python: 2.7
+      env: TOX_ENV=py27
+    - python: 3.4
+      env: TOX_ENV=py34
 
+install:
+  - pip install tox
+script:
+  - tox -e $TOX_ENV

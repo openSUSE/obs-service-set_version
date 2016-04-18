@@ -15,13 +15,13 @@ Install the following deps:
 ## Test suite
 To run the full testsuite, some dependencies are needed:
 
-    zypper in devscripts dpkg
+    zypper in devscripts dpkg python-tox
 
 If the dependencies are not installed, some tests are skipped. `zypper` itself
 is also needed for the tests with python packages and PEP440 compatible versions.
 
 To run the testsuite, execute:
 
-    python -m unittest discover tests/
+    tox -epy27
 
 The testrun may take some time.
