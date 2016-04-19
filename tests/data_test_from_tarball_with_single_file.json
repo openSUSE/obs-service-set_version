@@ -1,9 +1,9 @@
 [
   ["testprog-1.2.3.tar", [], "8.8.8", "1.2.3"],
+  ["testprog-1.2.3.tar", ["testprog-4.5.6"], "8.8.8", "4.5.6"],
   ["tetsprog-2015.10.tar", [], "8.8.8", "2015.10"],
   ["testprog-512.tar", [], "8.8.8", "512"],
   ["1.2.3.tar", ["testprog-4.5.6"], "8.8.8", "4.5.6"],
-  ["testprog-1.2.3.tar", ["testprog-4.5.6"], "8.8.8", "1.2.3"],
   ["testprog-master.tar", ["testprog-4.5.6"], "8.8.8", "4.5.6"],
   ["testprog-master.tar", ["testprog-4.5.6"], " ", "4.5.6"],
   ["testprog-master.tar", ["testprog-4.5.6"], "", "4.5.6"]
