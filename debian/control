@@ -1,4 +1,4 @@
-Source: obs-service-set-version
+Source: obs-service-set_version
 Section: devel
 Priority: extra
 Maintainer: Daniel Gollub <dgollub@brocade.com>
@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.3
 Homepage: https://github.com/openSUSE/obs-service-set_version
 
-Package: obs-service-set-version
+Package: obs-service-set_version
 Architecture: all
 Depends: ${misc:Depends}, sed
 Description: An OBS source service: Update spec file version
