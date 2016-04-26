@@ -331,12 +331,12 @@ if __name__ == '__main__':
     for f in filter(lambda x: x.endswith(".dsc"), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
-        _replace_tag(filename, 'Version', version)
+        _replace_tag(filename, 'Version', version + "-0")
 
     for f in filter(lambda x: x.endswith(("debian.changelog")), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
-        _replace_debian_changelog_version(filename, version)
+        _replace_debian_changelog_version(filename, version + "-0")
 
     # handle arch linux PKGBUILD files
     # TODO: Handle the md5sums generation!
