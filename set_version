@@ -303,6 +303,7 @@ if __name__ == '__main__':
         version = VersionDetector._autodetect(files_local, args["basename"])
 
     if not version:
+        print("unable to detect the version")
         sys.exit(-1)
 
     # if no files explicitly specified process whole directory
