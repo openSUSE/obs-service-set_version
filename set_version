@@ -107,12 +107,13 @@ class VersionDetector(object):
 
     @staticmethod
     def _get_version_via_obsinfo(files, basename):
-        for filename in filter(lambda x: x.endswith(basename + ".obsinfo"), files):
-          if os.path.exists(filename):
-              with open(filename, "r") as fp:
-                  for line in fp:
-                     if line.startswith("version: "):
-                         return line[9:]
+        join_suffix = basename + ".obsinfo"
+        for filename in filter(lambda x: x.endswith(join_suffix), files):
+            if os.path.exists(filename):
+                with open(filename, "r") as fp:
+                    for line in fp:
+                        if line.startswith("version: "):
+                            return line[9:]
         # Nothing found
         return None
 
