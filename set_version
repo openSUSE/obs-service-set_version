@@ -212,7 +212,7 @@ def _replace_tag(filename, tag, string):
     with open(filename, 'r+') as f:
         contents = f.read()
         f.seek(0)
-        if filename.endswith("PKGBUILD"):
+        if filename.endswith("PKGBUILD") or filename.endswith("build.collax"):
             contents_new, subs = re.subn(
                 r"^{tag}=.*".format(tag=tag),
                 r"{tag}={string}".format(tag=tag, string=string), contents,
@@ -354,6 +354,13 @@ if __name__ == '__main__':
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
         _replace_debian_changelog_version(filename, version + "-0")
+
+    # handle build.collax recipes
+    for f in filter(lambda x: x.endswith(("build.collax")), files):
+        filename = outdir + "/" + f
+        shutil.copyfile(f, filename)
+        _replace_tag(filename, "version", version)
+        _replace_tag(filename, "build", "0")
 
     # handle arch linux PKGBUILD files
     # TODO: Handle the md5sums generation!
