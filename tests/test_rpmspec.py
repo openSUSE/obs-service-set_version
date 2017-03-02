@@ -34,7 +34,8 @@ class SetVersionSpecfile(SetVersionBaseTest):
         obsinfo_file.write("name: my_base_name\n")
         obsinfo_file.write("version: %s\n" % version)
         obsinfo_file.write("mtime: 1463080107\n")
-        obsinfo_file.write("commit: 01fcec0959b42a163a7b0a943933488a217f2c9a\n")
+        obsinfo_file.write("commit: "
+                           "01fcec0959b42a163a7b0a943933488a217f2c9a\n")
         obsinfo_file.close()
         return os.path.join(self._tmpdir, filename)
 
@@ -85,7 +86,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
         for s in spec_path:
             self._check_file_assert_contains(s, new_version)
 
-    @file_data("data_test_from_obsinfo.json")
+    @file_data("data_test_from_tarball_with_single_file.json")
     def test_from_tarball_with_single_file(self, data):
         tarball_name, tarball_dirs, old_version, expected_version = data
         spec_path = self._write_specfile("test.spec",
@@ -99,13 +100,13 @@ class SetVersionSpecfile(SetVersionBaseTest):
         self._check_file_assert_contains(spec_path, "Group: AnyGroup")
 
     @file_data("data_test_from_tarball_with_single_file.json")
-    def test_from_tarball_with_single_file(self, data):
+    def test_from_obsinfo(self, data):
         tarball_name, tarball_dirs, old_version, expected_version = data
+        self._write_obsinfo("test.obsinfo", expected_version)
         spec_path = self._write_specfile("test.spec",
                                          {"Name": "foo",
                                           "Version": old_version,
                                           "Group": "AnyGroup"})
-        self._write_tarfile(tarball_name, tarball_dirs, [])
         self._run_set_version()
         self._check_file_assert_contains(spec_path, expected_version)
         self._check_file_assert_contains(spec_path, "Name: foo")
