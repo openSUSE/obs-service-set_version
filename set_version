@@ -51,8 +51,11 @@ def _get_local_files():
 class VersionDetector(object):
     @staticmethod
     def _autodetect(files, basename):
-        version = VersionDetector._get_version_via_archive_dirname(
+        version = VersionDetector._get_version_via_obsinfo(
             files, basename)
+        if not version:
+            version = VersionDetector._get_version_via_archive_dirname(
+                files, basename)
         if not version:
             version = VersionDetector._get_version_via_filename(
                 files, basename)
@@ -99,6 +102,17 @@ class VersionDetector(object):
                     v = VersionDetector.__get_version(zf.namelist(), basename)
                     if v:
                         return v
+        # Nothing found
+        return None
+
+    @staticmethod
+    def _get_version_via_obsinfo(files, basename):
+        for filename in filter(lambda x: x.endswith(basename + ".obsinfo"), files):
+          if os.path.exists(filename):
+              with open(filename, "r") as fp:
+                  for line in fp:
+                     if line.startswith("version: "):
+                         return line[9:]
         # Nothing found
         return None
 

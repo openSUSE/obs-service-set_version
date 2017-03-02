@@ -26,6 +26,18 @@ from test_base import SetVersionBaseTest
 class SetVersionSpecfile(SetVersionBaseTest):
     """Test set_version service for .spec files"""
 
+    def _write_obsinfo(self, filename, version):
+        # debian changelogs can't be created with empty versions
+        if not version.strip():
+            version = "0~0"
+        obsinfo_file = open(filename, "w")
+        obsinfo_file.write("name: my_base_name\n")
+        obsinfo_file.write("version: %s\n" % version)
+        obsinfo_file.write("mtime: 1463080107\n")
+        obsinfo_file.write("commit: 01fcec0959b42a163a7b0a943933488a217f2c9a\n")
+        obsinfo_file.close()
+        return os.path.join(self._tmpdir, filename)
+
     def _write_specfile(self, spec_name, spec_tags, custom=[]):
         """write a given filename with the given rpm tags and custom
         strings (i.e. '%define foo bar')"""
@@ -72,6 +84,19 @@ class SetVersionSpecfile(SetVersionBaseTest):
         self._run_set_version(params=["--version", new_version])
         for s in spec_path:
             self._check_file_assert_contains(s, new_version)
+
+    @file_data("data_test_from_obsinfo.json")
+    def test_from_tarball_with_single_file(self, data):
+        tarball_name, tarball_dirs, old_version, expected_version = data
+        spec_path = self._write_specfile("test.spec",
+                                         {"Name": "foo",
+                                          "Version": old_version,
+                                          "Group": "AnyGroup"})
+        self._write_tarfile(tarball_name, tarball_dirs, [])
+        self._run_set_version()
+        self._check_file_assert_contains(spec_path, expected_version)
+        self._check_file_assert_contains(spec_path, "Name: foo")
+        self._check_file_assert_contains(spec_path, "Group: AnyGroup")
 
     @file_data("data_test_from_tarball_with_single_file.json")
     def test_from_tarball_with_single_file(self, data):
