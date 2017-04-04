@@ -113,7 +113,9 @@ class VersionDetector(object):
                 with open(filename, "r") as fp:
                     for line in fp:
                         if line.startswith("version: "):
-                            return line[9:]
+                            string = line[9:]
+                            string = string.rstrip()
+                            return string
         # Nothing found
         return None
 

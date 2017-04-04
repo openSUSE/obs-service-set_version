@@ -16,11 +16,12 @@
 
 
 import os
-
+import imp
 from ddt import data, ddt, file_data, unpack
 
 from test_base import SetVersionBaseTest
 
+sv = imp.load_source("set_version", "set_version")
 
 @ddt
 class SetVersionSpecfile(SetVersionBaseTest):
@@ -50,6 +51,12 @@ class SetVersionSpecfile(SetVersionBaseTest):
                 f.write("%s: %s\n" % (key, val))
             f.write("\n")
         return spec_path
+
+    def test_version_from_obsinfo(self):
+        obsinfo = self._write_obsinfo("test.obsinfo","0.0.1")
+        files = [obsinfo]
+        ver = sv.VersionDetector._get_version_via_obsinfo(files,'')
+        self.assertEqual(ver,"0.0.1")
 
     @file_data("data_test_from_commandline.json")
     def test_from_commandline(self, data):
