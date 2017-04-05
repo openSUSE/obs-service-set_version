@@ -136,6 +136,18 @@ class VersionDetector(object):
         # Nothing found
         return None
 
+    @staticmethod
+    def _get_version_via_debian_dsc(filename):
+        version = re.compile(r'^Version:([ \t\f\v]*)[^%\n\r]*', re.IGNORECASE)
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                for line in f:
+                    versionmatch = version.match(line)
+                    if versionmatch:
+                        return versionmatch.group(0)
+        # Nothing found
+        return None
+
 
 class PackageTypeDetector(object):
     @staticmethod
@@ -347,15 +359,23 @@ if __name__ == '__main__':
         _replace_tag(filename, 'Release', "0")
 
     # handle debian packages
+    # append -0 only for non-native packages, otherwise native packages
+    # will be half-converted to non-native and break dpkg-buildpackage
     for f in filter(lambda x: x.endswith(".dsc"), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
-        _replace_tag(filename, 'Version', version + "-0")
+        if "-" in VersionDetector._get_version_via_debian_dsc(filename):
+            _replace_tag(filename, 'Version', version + "-0")
+        else:
+            _replace_tag(filename, 'Version', version)
 
     for f in filter(lambda x: x.endswith(("debian.changelog")), files):
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
-        _replace_debian_changelog_version(filename, version + "-0")
+        if "-" in VersionDetector._get_version_via_debian_changelog(filename):
+            _replace_debian_changelog_version(filename, version + "-0")
+        else:
+            _replace_debian_changelog_version(filename, version)
 
     # handle build.collax recipes
     for f in filter(lambda x: x.endswith(("build.collax")), files):
