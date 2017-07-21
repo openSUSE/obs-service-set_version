@@ -12,5 +12,9 @@ Can be used after download_url or tar_scm service.
   <parameter name="file">
     <description>Update only the given file.</description>
   </parameter>
+  <parameter name="regex">
+    <description>This regex can be used to autodetect the version from the source dir
+inside the source file or the source file directly.</description>
+  </parameter>
 </service>
 

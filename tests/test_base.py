@@ -248,3 +248,20 @@ class TestSetVersionBasics(SetVersionBaseTest):
             self.assertEqual(len(current_lines), len(expected_lines))
             for nbr, l in enumerate(current_lines):
                 self.assertEqual(l, expected_lines[nbr])
+
+    def test_autodetect_filename(self):
+        dname = os.path.join(self._tmpdir, "test-v1.2.3")
+        os.chdir(self._tmpdir)
+        os.mkdir(dname)
+        subprocess.call(['tar', '-cf', 'test-v1.2.3.tar', 'test-v1.2.3'])
+        files_local = ['test-v1.2.3.tar']
+
+        # checking dirname in archive detection
+        args = {'regex': '^test-v(.*)', 'basename': ''}
+        ver = sv._version_detect(args, files_local)
+        self.assertEqual(ver, '1.2.3')
+
+        # checking archive filename detection
+        args = {'regex': '^test-v(.*).tar', 'basename': ''}
+        ver = sv._version_detect(args, files_local)
+        self.assertEqual(ver, '1.2.3')

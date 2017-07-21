@@ -35,6 +35,8 @@ else:
     HAS_PACKAGING = True
 
 
+DEBUG = False
+
 outdir = None
 suffixes = ('obscpio', 'tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz',
             'zip')
@@ -50,36 +52,61 @@ def _get_local_files():
 
 
 class VersionDetector(object):
-    @staticmethod
-    def _autodetect(files, basename):
+    def __init__(self, regex=None):
+        self.regex = regex
+
+    def _autodetect(self, files, basename):
+        if DEBUG:
+            print("Starting version autodetect")
+
         version = VersionDetector._get_version_via_obsinfo(
             files, basename)
         if not version:
-            version = VersionDetector._get_version_via_archive_dirname(
+            if DEBUG:
+                print("Could not find version via obsinfo")
+            version = self._get_version_via_archive_dirname(
                 files, basename)
         if not version:
-            version = VersionDetector._get_version_via_filename(
+            if DEBUG:
+                print("Could not find version via archive dirname")
+            version = self._get_version_via_filename(
                 files, basename)
         if not version:
+            if DEBUG:
+                print("Could not find version via filename")
             version = VersionDetector._get_version_via_debian_changelog(
                 "debian.changelog")
+        if not version:
+            if DEBUG:
+                print("Could not find version via debian changelog")
         return version
 
-    @staticmethod
-    def _get_version_via_filename(files, basename):
+    def _get_version_via_filename(self, files, basename):
         """ detect version based on file names"""
+        if DEBUG:
+            print("detecting version via files")
         for f in files:
-            regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
-                                                     suffixes_re)
+            if DEBUG:
+                print("  - checking file ", f)
+            if self.regex:
+                if DEBUG:
+                    print("  - using regex: ", self.regex)
+                regex = self.regex
+            else:
+                regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (re.escape(basename),
+                                                         suffixes_re)
             m = re.match(regex, f)
             if m:
                 return m.group(1)
         # Nothing found
         return None
 
-    @staticmethod
-    def __get_version(str_list, basename):
-        regex = "%s[^\/]*[-_]([\d][^\/]*).*" % basename
+    def __get_version(self, str_list, basename):
+        if self.regex:
+            regex = self.regex
+        else:
+            regex = "%s.*[-_]([\d][^\/]*).*" % basename
+
         for s in str_list:
             m = re.match(regex, s)
             if m:
@@ -87,20 +114,19 @@ class VersionDetector(object):
         # Nothing found
         return None
 
-    @staticmethod
-    def _get_version_via_archive_dirname(files, basename):
+    def _get_version_via_archive_dirname(self, files, basename):
         """ detect version based tar'd directory name"""
         for f in filter(lambda x: x.endswith(suffixes), files):
             # handle tarfiles
             if tarfile.is_tarfile(f):
                 with tarfile.open(f) as tf:
-                    v = VersionDetector.__get_version(tf.getnames(), basename)
+                    v = self.__get_version(tf.getnames(), basename)
                     if v:
                         return v
             # handle zipfiles
             if zipfile.is_zipfile(f):
                 with zipfile.ZipFile(f, 'r') as zf:
-                    v = VersionDetector.__get_version(zf.namelist(), basename)
+                    v = self.__get_version(zf.namelist(), basename)
                     if v:
                         return v
         # Nothing found
@@ -283,6 +309,15 @@ def _version_python_pip2rpm(version_pip):
     return version_rpm
 
 
+def _version_detect(args, files_local):
+    vdetect = VersionDetector(args['regex'])
+    ver = vdetect._autodetect(files_local, args["basename"])
+    if DEBUG:
+        print("Found version '%s'" % ver)
+
+    return ver
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
@@ -300,11 +335,13 @@ if __name__ == '__main__':
     parser.add_argument('--file', action='append',
                         help='modify only this build description. '
                         'maybe used multiple times.')
+    parser.add_argument('--debug', default=False,
+                        help='Enable more verbose output.')
+    parser.add_argument('--regex',
+                        help='regex to be used by autodetect')
     args = vars(parser.parse_args())
 
     version = args['version']
-
-    files_local = _get_local_files()
 
     outdir = args['outdir']
 
@@ -312,8 +349,14 @@ if __name__ == '__main__':
         print("no outdir specified")
         sys.exit(-1)
 
+    if args['debug']:
+        print("Running in debug mode")
+        DEBUG = True
+
+    files_local = _get_local_files()
+
     if not version:
-        version = VersionDetector._autodetect(files_local, args["basename"])
+        version = _version_detect(args, files_local)
 
     if not version:
         print("unable to detect the version")
