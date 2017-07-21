@@ -3,7 +3,7 @@
 This is an [Open Build Service](http://openbuildservice.org/) source service. It updates an RPM spec or Debian changelog according to the existing files.
 
 This is the git repository for [openSUSE:Tools/obs-service-set_version](https://build.opensuse.org/package/show/openSUSE:Tools/obs-service-set_version). The authoritative source is https://github.com/openSUSE/obs-service-set_version
- 
+
 The service can be used in combination with other services like [download_files](https://github.com/openSUSE/obs-service-download_files), [tar_scm](https://github.com/openSUSE/obs-service-tar_scm), [recompress](https://github.com/openSUSE/obs-service-recompress) or [extract_file](https://github.com/openSUSE/obs-service-extract_file) e.g. within the [GIT integration](https://en.opensuse.org/openSUSE:Build_Service_Concept_SourceService#Example_2:_GIT_integration) workflow.
 
 ## Dependencies
@@ -20,14 +20,21 @@ To run the full testsuite, some dependencies are needed:
 If the dependencies are not installed, some tests are skipped. `zypper` itself
 is also needed for the tests with python packages and PEP440 compatible versions.
 
-To run the testsuite, execute:
+To run the full testsuite, execute:
 
     python -m unittest discover tests/
 
-If ```zypper``` and/or ```dpkg``` are installed, theses tests take some time.
-The testrun may take some time. Don't forget to run also
+If ```zypper``` and/or ```dpkg``` are installed, theses tests take some time,
+but you can specify a filename pattern, which test files should be run.
+
+    python -m unittest discover -p test_b*.py tests/
+
+Don't forget to run also
 
     flake8 set_version tests/
 
+or simply use
 
+    make test
 
+to run all linters and tests

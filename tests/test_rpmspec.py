@@ -57,7 +57,8 @@ class SetVersionSpecfile(SetVersionBaseTest):
     def test_version_from_obsinfo(self):
         obsinfo = self._write_obsinfo("test.obsinfo", "0.0.1")
         files = [obsinfo]
-        ver = sv.VersionDetector._get_version_via_obsinfo(files, '')
+        vdetector = sv.VersionDetector(None, files, '')
+        ver = vdetector._get_version_via_obsinfo()
         self.assertEqual(ver, "0.0.1")
 
     @file_data("data_test_from_commandline.json")
