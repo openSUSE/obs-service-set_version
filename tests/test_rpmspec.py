@@ -145,7 +145,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
             "test-master.tar", [],
             ["test-5.0.0.0b2dev188/test.egg-info/PKG-INFO"],
             "5.0.0.0b2dev188",
-            "5.0.0.0~b2~dev188"
+            "5.0.0.0~xbeta2~dev188"
         )
     )
     @unpack
@@ -181,7 +181,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
                 "%setup -p -n %{component}-%{version}"
             ],
             [
-                "Version: 5.0.0.0~b2~dev188",
+                "Version: 5.0.0.0~xbeta2~dev188",
                 "%define version_unconverted 5.0.0.0b2dev188",
                 "",
                 "Name: test",
@@ -201,7 +201,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
                 "%setup -p -n %{component}-%{version}-foobar"
             ],
             [
-                "Version: 5.0.0.0~b2~dev188",
+                "Version: 5.0.0.0~xbeta2~dev188",
                 "%define version_unconverted 5.0.0.0b2dev188",
                 "",
                 "Name: test",
@@ -215,7 +215,7 @@ class SetVersionSpecfile(SetVersionBaseTest):
         (
             "test.spec",
             [
-                "Version: 5.0.0.0~b2~dev188",
+                "Version: 5.0.0.0~xbeta2~dev188",
                 "%define version_unconverted 5.0.0.0b2dev188",
             ],
             [
