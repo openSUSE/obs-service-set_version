@@ -4,8 +4,7 @@ sudo: false
 language: python
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
+  - "3.6"
 
 # see http://docs.travis-ci.com/user/apt/#Adding-APT-Packages for adding packages in a container build
 addons:
@@ -15,7 +14,7 @@ addons:
         - dpkg
 
 install:
-  - pip install flake8 ddt unittest2 packaging --use-mirrors
+  - pip install flake8 ddt unittest2 packaging
 script:
   - flake8 set_version tests/
   - python -m unittest discover tests/

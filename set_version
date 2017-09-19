@@ -265,34 +265,16 @@ def _version_python_pip2rpm(version_pip):
 
     v = parse(version_pip)
     if isinstance(v, Version):
-        # this is a PEP440 conform version
-        # TODO(toabctl): there's a epoch in PEP440. Howto handle these without
-        # using rpm's epoch feature?
-        parts = []
-        # Release segment
-        parts.append(".".join(str(x) for x in v._version.release))
-
-        # Pre-release
-        if v._version.pre is not None:
-            parts.append("~")
-            parts.append("".join(str(x) for x in v._version.pre))
-
-        # Post-release
-        if v._version.post is not None:
-            parts.append(".post{0}".format(v._version.post[1]))
-
-        # Development release
-        if v._version.dev is not None:
-            if v._version.pre is None:
-                parts.append("~a0")
-            parts.append("~dev{0}".format(v._version.dev[1]))
-
-        # Local version segment
-        if v._version.local is not None:
-            parts.append(
-                "+{0}".format(".".join(str(x) for x in v._version.local))
-            )
-        version_rpm = "".join(parts)
+        if v.is_prerelease:
+            v_rpm = v.public
+            # we need to add the 'x' in front of alpha/beta release because
+            # in the python world, "1.1a10" > "1.1.dev10"
+            # but in the rpm world, "1.1~a10" < "1.1~dev10"
+            v_rpm = v_rpm.replace('a', '~xalpha')
+            v_rpm = v_rpm.replace('b', '~xbeta')
+            v_rpm = v_rpm.replace('rc', '~xrc')
+            v_rpm = v_rpm.replace('.dev', '~dev')
+            version_rpm = v_rpm
     elif isinstance(v, LegacyVersion):
         # TODO(toabctl): handle setuptools style legacy version
         pass
