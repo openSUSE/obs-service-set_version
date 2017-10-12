@@ -372,5 +372,6 @@ if __name__ == '__main__':
         filename = outdir + "/" + f
         shutil.copyfile(f, filename)
         _replace_tag(filename, "md5sums", "('SKIP')")
+        _replace_tag(filename, "sha256sums", "('SKIP')")
         _replace_tag(filename, "pkgver", version)
         _replace_tag(filename, "pkgrel", "0")

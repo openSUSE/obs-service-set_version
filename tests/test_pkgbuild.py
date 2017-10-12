@@ -42,8 +42,12 @@ class SetVersionPKGBUILD(SetVersionBaseTest):
     def test_from_commandline(self, data):
         old_version, new_version = data
         pkgbuild_path = self._write_pkgbuild_file(
-            "PKGBUILD", {"pkgver": old_version})
+            "PKGBUILD", {"pkgver": old_version, "md5sums": "fail", "sha256sums": "fail"})
         self._run_set_version(params=['--version', new_version])
         expected_str = "pkgver=%s" % (new_version)
         self._check_file_assert_contains(pkgbuild_path, expected_str)
         self._check_file_assert_not_contains(pkgbuild_path, old_version)
+        expected_str = "md5sums=('SKIP')"
+        self._check_file_assert_contains(pkgbuild_path, expected_str)
+        expected_str = "sha256sums=('SKIP')"
+        self._check_file_assert_contains(pkgbuild_path, expected_str)
