@@ -24,4 +24,9 @@ To run the testsuite, execute:
 
     python -m unittest discover tests/
 
-The testrun may take some time.
+The testrun may take some time. Don't forget to run also
+
+    flake8 set_version tests/
+
+
+
