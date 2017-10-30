@@ -283,6 +283,12 @@ def _version_python_pip2rpm(version_pip):
 
 
 if __name__ == '__main__':
+
+    # may be a real fix or just a temporary workaround that python3 fails otherwise
+    # on non utf-8 chars in build env where "C" is default atm
+    import locale
+    locale.setlocale(locale.LC_CTYPE, 'C.UTF-8')
+
     parser = argparse.ArgumentParser(
         description='Open Build Service source service "set_version".'
         'Used to update build description files with a '
