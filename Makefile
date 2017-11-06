@@ -9,4 +9,8 @@ install:
 	install -m 0755 set_version $(DESTDIR)$(servicedir)
 	install -m 0644 set_version.service $(DESTDIR)$(servicedir)
 
-.PHONY: all install
+test:
+	flake8 set_version tests/
+	python -m unittest discover tests/
+
+.PHONY: all install test
