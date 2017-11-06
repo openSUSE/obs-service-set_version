@@ -25,7 +25,7 @@ import zipfile
 
 try:
     from packaging.version import LegacyVersion, Version, parse
-except:
+except ImportError as exc:
     HAS_PACKAGING = False
     import warnings
     warnings.warn("install 'packaging' to improve python package versions",
