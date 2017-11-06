@@ -13,4 +13,8 @@ test:
 	flake8 set_version tests/
 	python -m unittest discover tests/
 
+clean:
+	find -name "*.pyc" -exec rm {} \;
+	rm -rf set_versionc
+
 .PHONY: all install test
