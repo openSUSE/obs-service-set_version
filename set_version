@@ -78,7 +78,7 @@ class VersionDetector(object):
 
     @staticmethod
     def __get_version(str_list, basename):
-        regex = "%s.*[-_]([\d][^\/]*).*" % basename
+        regex = "%s[^\/]*[-_]([\d][^\/]*).*" % basename
         for s in str_list:
             m = re.match(regex, s)
             if m:
