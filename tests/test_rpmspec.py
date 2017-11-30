@@ -17,6 +17,7 @@
 
 import os
 import imp
+import shutil
 from ddt import data, ddt, file_data, unpack
 
 from test_base import SetVersionBaseTest
@@ -260,3 +261,11 @@ class SetVersionSpecfile(SetVersionBaseTest):
             self.assertEqual(len(current_lines), len(expected_spec_lines))
             for nbr, l in enumerate(current_lines):
                 self.assertEqual(l, expected_spec_lines[nbr])
+
+    def test_broken_utf8_spec(self):
+        fn = os.path.join(os.path.dirname(__file__), 'fixtures',
+                          'broken-utf8.spec')
+        nfn = fn + "1"
+        shutil.copyfile(fn, nfn)
+        sv._replace_spec_setup(nfn, '0.0.1')
+        os.unlink(nfn)
