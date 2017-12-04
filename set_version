@@ -22,6 +22,7 @@ import shutil
 import sys
 import tarfile
 import zipfile
+import codecs
 
 try:
     from packaging.version import LegacyVersion, Version, parse
@@ -110,7 +111,7 @@ class VersionDetector(object):
         join_suffix = basename + ".obsinfo"
         for filename in filter(lambda x: x.endswith(join_suffix), files):
             if os.path.exists(filename):
-                with open(filename, "r") as fp:
+                with codecs.open(filename, 'r', 'utf8') as fp:
                     for line in fp:
                         if line.startswith("version: "):
                             string = line[9:]
@@ -128,7 +129,7 @@ class VersionDetector(object):
                              % {'name_chars': '[-+0-9a-z.]'},
                              re.IGNORECASE)
         if os.path.exists(filename):
-            with open(filename, "r") as f:
+            with codecs.open(filename, 'r', 'utf8') as f:
                 firstline = f.readline()
                 topmatch = topline.match(firstline)
                 if topmatch:
@@ -140,7 +141,7 @@ class VersionDetector(object):
     def _get_version_via_debian_dsc(filename):
         version = re.compile(r'^Version:([ \t\f\v]*)[^%\n\r]*', re.IGNORECASE)
         if os.path.exists(filename):
-            with open(filename, "r") as f:
+            with codecs.open(filename, 'r', 'utf8') as f:
                 for line in f:
                     versionmatch = version.match(line)
                     if versionmatch:
@@ -177,7 +178,7 @@ class PackageTypeDetector(object):
 
 def _replace_define(filename, def_name, def_value, add_if_missing=True):
     # first, modify a copy of filename and then move it
-    with open(filename, 'r+') as f:
+    with codecs.open(filename, 'r+', 'utf8') as f:
         contents = f.read()
         f.seek(0)
         contents_new, subs = re.subn(
@@ -200,7 +201,7 @@ def _replace_define(filename, def_name, def_value, add_if_missing=True):
 
 def _replace_spec_setup(filename, version_define):
     # first, modify a copy of filename and then move it
-    with open(filename, 'r+') as f:
+    with codecs.open(filename, 'r+', 'utf8') as f:
         contents = f.read()
         f.seek(0)
         # %setup without "-n" uses implicit "-n" as "%{name}-%{version}"
@@ -223,7 +224,7 @@ def _replace_spec_setup(filename, version_define):
 
 def _replace_tag(filename, tag, string):
     # first, modify a copy of filename and then move it
-    with open(filename, 'r+') as f:
+    with codecs.open(filename, 'r+', 'utf8') as f:
         contents = f.read()
         f.seek(0)
         if filename.endswith("PKGBUILD") or filename.endswith("build.collax"):
@@ -248,7 +249,7 @@ def _replace_debian_changelog_version(filename, version_new):
     # get current version
     version_current = VersionDetector._get_version_via_debian_changelog(
         filename)
-    with open(filename, 'r+') as f:
+    with codecs.open(filename, 'r+', 'utf8') as f:
         content_lines = f.readlines()
         f.seek(0)
         content_lines[0] = content_lines[0].replace(
