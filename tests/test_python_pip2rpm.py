@@ -65,12 +65,21 @@ class VersionCompareBase(object):
 
 class ZypperVersionCompare(VersionCompareBase):
     """ class to compare version strings with zypper"""
-    def __cmp__(self, other):
+    def _do_compare(self, other):
         # zypper's return val is negative if v1 is older than v2.
         # See 'man zypper'
         ret = subprocess.check_output("zypper --terse versioncmp %s %s" % (
             self.version_str, other.version_str), shell=True)
         return int(ret)
+
+    def __lt__(self, other):
+        return self._do_compare(other) < 0
+
+    def __gt__(self, other):
+        return self._do_compare(other) > 0
+
+    def __eq__(self, other):
+        return (self._do_compare(other) == 0)
 
 
 class DpkgVersionCompare(VersionCompareBase):
