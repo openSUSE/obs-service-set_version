@@ -24,6 +24,7 @@ To run the testsuite, execute:
 
     python -m unittest discover tests/
 
+If ```zypper``` and/or ```dpkg``` are installed, theses tests take some time.
 The testrun may take some time. Don't forget to run also
 
     flake8 set_version tests/
