@@ -1,3 +1,5 @@
 *.pyc
+*.pyo
 *.sw?
 set_versionc
+tests/test_newline/
