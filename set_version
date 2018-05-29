@@ -132,8 +132,7 @@ class VersionDetector(object):
         return None
 
     def _get_version_via_obsinfo(self):
-        join_suffix = self.basename + ".obsinfo"
-        for fname in filter(lambda x: x.endswith(join_suffix), self.file_list):
+        for fname in filter(lambda x: x.startswith(self.basename) and x.endswith(".obsinfo"), self.file_list):
             if os.path.exists(fname):
                 with codecs.open(fname, 'r', 'utf8') as fp:
                     for line in fp:
