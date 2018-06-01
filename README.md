@@ -15,7 +15,7 @@ Install the following deps:
 ## Test suite
 To run the full testsuite, some dependencies are needed:
 
-    zypper in devscripts dpkg
+    zypper in devscripts dpkg python-flake8
 
 If the dependencies are not installed, some tests are skipped. `zypper` itself
 is also needed for the tests with python packages and PEP440 compatible versions.
