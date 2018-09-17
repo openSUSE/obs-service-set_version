@@ -26,7 +26,7 @@ import codecs
 
 try:
     from packaging.version import LegacyVersion, Version, parse
-except ImportError as exc:
+except ImportError:
     HAS_PACKAGING = False
     import warnings
     warnings.warn("install 'packaging' to improve python package versions",
