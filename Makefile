@@ -1,4 +1,5 @@
 prefix = /usr
+PYTHON := python
 
 servicedir = ${prefix}/lib/obs/service
 
@@ -11,7 +12,7 @@ install:
 
 test:
 	flake8 set_version tests/
-	python -m unittest discover tests/
+	${PYTHON} -m unittest discover tests/
 
 clean:
 	find -name "*.pyc" -exec rm {} \;
