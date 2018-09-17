@@ -193,8 +193,12 @@ class PackageTypeDetector(object):
             with tarfile.open(f) as tf:
                 names = tf.getnames()
         if zipfile.is_zipfile(f):
-            with zipfile.ZipFile(f, 'r') as zf:
-                names = zf.namelist()
+            try:
+                with zipfile.ZipFile(f, 'r') as zf:
+                    names = zf.namelist()
+            except:
+                # is_zipfile has often false positives and module is crashing on processing
+                return False
         for n in map(lambda x: os.path.normpath(x), names):
             if n.endswith("egg-info/PKG-INFO"):
                 return True
