@@ -124,10 +124,15 @@ class VersionDetector(object):
                         return v
             # handle zipfiles
             if zipfile.is_zipfile(f):
-                with zipfile.ZipFile(f, 'r') as zf:
-                    v = self.__get_version(zf.namelist())
-                    if v:
-                        return v
+                try:
+                    with zipfile.ZipFile(f, 'r') as zf:
+                        v = self.__get_version(zf.namelist())
+                        if v:
+                            return v
+                except OSError:
+                    # is_zipfile has often false positives and module is
+                    # crashing on processing
+                    pass
         # Nothing found
         return None
 
@@ -196,9 +201,10 @@ class PackageTypeDetector(object):
             try:
                 with zipfile.ZipFile(f, 'r') as zf:
                     names = zf.namelist()
-            except:
-                # is_zipfile has often false positives and module is crashing on processing
-                return False
+            except OSError:
+                # is_zipfile has often false positives and module is
+                # crashing on processing
+                pass
         for n in map(lambda x: os.path.normpath(x), names):
             if n.endswith("egg-info/PKG-INFO"):
                 return True
