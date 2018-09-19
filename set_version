@@ -129,9 +129,11 @@ class VersionDetector(object):
                         v = self.__get_version(zf.namelist())
                         if v:
                             return v
+                # is_zipfile has often false positives and module is
+                # crashing on processing
                 except OSError:
-                    # is_zipfile has often false positives and module is
-                    # crashing on processing
+                    pass
+                except IOError:
                     pass
         # Nothing found
         return None
