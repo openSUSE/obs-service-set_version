@@ -154,7 +154,7 @@ class VersionDetector(object):
     @staticmethod
     def get_version_via_debian_changelog(filename):
         # from http://anonscm.debian.org/cgit/pkg-python-debian/\
-            # python-debian.git/tree/lib/debian/changelog.py
+        #      python-debian.git/tree/lib/debian/changelog.py
         topline = re.compile(r'^(\w%(name_chars)s*) \(([^\(\) \t]+)\)'
                              r'((\s+%(name_chars)s+)+)\;'
                              % {'name_chars': '[-+0-9a-z.]'},
