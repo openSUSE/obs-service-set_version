@@ -8,7 +8,7 @@ Homepage: https://github.com/openSUSE/obs-service-set_version
 
 Package: obs-service-set-version
 Architecture: all
-Depends: ${misc:Depends}, sed
+Depends: ${misc:Depends}, sed, python3
 Description: An OBS source service: Update spec file version
  This is a source service for openSUSE Build Service.
  Very simply script to update the version in .spec or .dsc files according to
