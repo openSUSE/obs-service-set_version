@@ -2,7 +2,7 @@ Source: obs-service-set-version
 Section: devel
 Priority: extra
 Maintainer: Daniel Gollub <dgollub@brocade.com>
-Build-Depends: debhelper (>= 8.0.0), python, flake8 | python-flake8, python-ddt, python-packaging
+Build-Depends: debhelper (>= 8.0.0), python3, flake8 | python3-flake8, python3-ddt, python3-packaging
 Standards-Version: 3.9.3
 Homepage: https://github.com/openSUSE/obs-service-set_version
 
