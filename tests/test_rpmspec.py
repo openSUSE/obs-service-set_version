@@ -117,6 +117,8 @@ class SetVersionSpecfile(SetVersionBaseTest):
                                          {"Name": "foo",
                                           "Version": old_version,
                                           "Group": "AnyGroup"})
+        os.mkdir(os.path.join(self._tmpdir, "pristine-tar"))
+        os.mkdir(os.path.join(self._tmpdir, "pristine.tar"))
         self._run_set_version()
         self._check_file_assert_contains(spec_path, expected_version)
         self._check_file_assert_contains(spec_path, "Name: foo")
