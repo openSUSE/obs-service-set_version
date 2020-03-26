@@ -41,8 +41,8 @@ if os.environ.get('DEBUG_SET_VERSION') == "1":
     DEBUG = True
 
 outdir = None
-suffixes = ('obscpio', 'tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz',
-            'zip')
+suffixes = ('\.obscpio', '\.tar', '\.tar.gz', '\.tgz', '\.tar.bz2', '\.tbz2',
+            '\.tar.xz', '\.zip')
 suffixes_re = "|".join(map(lambda x: re.escape(x), suffixes))
 
 
@@ -99,7 +99,7 @@ class VersionDetector(object):
                     print("  - using regex: ", self.regex)
                 regex = self.regex
             else:
-                regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (
+                regex = r"^%s.*[-_]([\d].*)(?:%s)$" % (
                     re.escape(self.basename),
                     suffixes_re)
             m = re.match(regex, f)
@@ -126,6 +126,10 @@ class VersionDetector(object):
         for f in filter(lambda x: x.endswith(suffixes), self.file_list):
             if DEBUG:
                 print("Checking path: '%s'." % f)
+            if not os.path.isfile(f):
+                if DEBUG:
+                    print("Skipping path: '%s' is not a regular file." % f)
+                continue
             # handle tarfiles
             if tarfile.is_tarfile(f):
                 with tarfile.open(f) as tf:
@@ -206,6 +210,10 @@ class PackageTypeDetector(object):
     @staticmethod
     def _is_python(f):
         names = []
+        if not os.path.isfile(f):
+            if DEBUG:
+                print("Skipping path: '%s' is not a regular file." % f)
+            return False
         if tarfile.is_tarfile(f):
             with tarfile.open(f) as tf:
                 names = tf.getnames()
