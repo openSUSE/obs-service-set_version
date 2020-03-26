@@ -28,6 +28,9 @@ import unittest
 
 from ddt import data, ddt, unpack
 
+DEBUG = False
+if os.environ.get('DEBUG_SET_VERSION') == "1":
+    DEBUG = True
 
 # NOTE(toabctl): Hack to import non-module file for testing
 sv = imp.load_source("set_version", "set_version")
@@ -97,12 +100,16 @@ class SetVersionBaseTest(unittest.TestCase):
             shutil.rmtree(self._tmpoutdir)
         except subprocess.CalledProcessError as e:
             raise Exception(
-                "Can not call '%s' in dir '%s'. Error: %s" % ("".join(cmd),
+                "Can not call '%s' in dir '%s'. Error: %s" % (" ".join(cmd),
                                                               self._tmpdir,
                                                               e.output))
 
     def tearDown(self):
-        shutil.rmtree(self._tmpdir)
+        if DEBUG:
+            print("DEBUG_SET_VERSION enabled: Please remove '%s' manually."
+                  % self._tmpdir)
+        else:
+            shutil.rmtree(self._tmpdir)
 
 
 @ddt

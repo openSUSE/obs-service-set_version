@@ -37,9 +37,12 @@ else:
 
 DEBUG = False
 
+if os.environ.get('DEBUG_SET_VERSION') == "1":
+    DEBUG = True
+
 outdir = None
-suffixes = ('obscpio', 'tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz',
-            'zip')
+suffixes = ('\.obscpio', '\.tar', '\.tar.gz', '\.tgz', '\.tar.bz2', '\.tbz2',
+            '\.tar.xz', '\.zip')
 suffixes_re = "|".join(map(lambda x: re.escape(x), suffixes))
 
 
@@ -61,22 +64,27 @@ class VersionDetector(object):
         if DEBUG:
             print("Starting version autodetect")
 
+        if DEBUG:
+            print("-- Starting version detection via obsinfo")
         version = self._get_version_via_obsinfo()
         if not version:
             if DEBUG:
-                print("Could not find version via obsinfo")
+                print("--- Could not find version via obsinfo")
+                print("-- Starting version detection via archive dirname")
             version = self._get_version_via_archive_dirname()
         if not version:
             if DEBUG:
-                print("Could not find version via archive dirname")
+                print("--- Could not find version via archive dirname")
+                print("-- Starting version detection via filename")
             version = self._get_version_via_filename()
         if not version:
             if DEBUG:
-                print("Could not find version via filename")
+                print("--- Could not find version via filename")
+                print("-- Starting version detection via debian changelog")
             version = self.get_version_via_debian_changelog("debian.changelog")
         if not version:
             if DEBUG:
-                print("Could not find version via debian changelog")
+                print("--- Could not find version via debian changelog")
         return version
 
     def _get_version_via_filename(self):
@@ -91,7 +99,7 @@ class VersionDetector(object):
                     print("  - using regex: ", self.regex)
                 regex = self.regex
             else:
-                regex = r"^%s.*[-_]([\d].*)\.(?:%s)$" % (
+                regex = r"^%s.*[-_]([\d].*)(?:%s)$" % (
                     re.escape(self.basename),
                     suffixes_re)
             m = re.match(regex, f)
@@ -116,6 +124,12 @@ class VersionDetector(object):
     def _get_version_via_archive_dirname(self):
         """ detect version based tar'd directory name"""
         for f in filter(lambda x: x.endswith(suffixes), self.file_list):
+            if DEBUG:
+                print("Checking path: '%s'." % f)
+            if not os.path.isfile(f):
+                if DEBUG:
+                    print("Skipping path: '%s' is not a regular file." % f)
+                continue
             # handle tarfiles
             if tarfile.is_tarfile(f):
                 with tarfile.open(f) as tf:
@@ -196,6 +210,10 @@ class PackageTypeDetector(object):
     @staticmethod
     def _is_python(f):
         names = []
+        if not os.path.isfile(f):
+            if DEBUG:
+                print("Skipping path: '%s' is not a regular file." % f)
+            return False
         if tarfile.is_tarfile(f):
             with tarfile.open(f) as tf:
                 names = tf.getnames()
