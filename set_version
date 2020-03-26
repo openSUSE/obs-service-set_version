@@ -37,6 +37,9 @@ else:
 
 DEBUG = False
 
+if os.environ.get('DEBUG_SET_VERSION') == "1":
+    DEBUG = True
+
 outdir = None
 suffixes = ('obscpio', 'tar', 'tar.gz', 'tgz', 'tar.bz2', 'tbz2', 'tar.xz',
             'zip')
@@ -61,22 +64,27 @@ class VersionDetector(object):
         if DEBUG:
             print("Starting version autodetect")
 
+        if DEBUG:
+            print("-- Starting version detection via obsinfo")
         version = self._get_version_via_obsinfo()
         if not version:
             if DEBUG:
-                print("Could not find version via obsinfo")
+                print("--- Could not find version via obsinfo")
+                print("-- Starting version detection via archive dirname")
             version = self._get_version_via_archive_dirname()
         if not version:
             if DEBUG:
-                print("Could not find version via archive dirname")
+                print("--- Could not find version via archive dirname")
+                print("-- Starting version detection via filename")
             version = self._get_version_via_filename()
         if not version:
             if DEBUG:
-                print("Could not find version via filename")
+                print("--- Could not find version via filename")
+                print("-- Starting version detection via debian changelog")
             version = self.get_version_via_debian_changelog("debian.changelog")
         if not version:
             if DEBUG:
-                print("Could not find version via debian changelog")
+                print("--- Could not find version via debian changelog")
         return version
 
     def _get_version_via_filename(self):
@@ -116,6 +124,8 @@ class VersionDetector(object):
     def _get_version_via_archive_dirname(self):
         """ detect version based tar'd directory name"""
         for f in filter(lambda x: x.endswith(suffixes), self.file_list):
+            if DEBUG:
+                print("Checking path: '%s'." % f)
             # handle tarfiles
             if tarfile.is_tarfile(f):
                 with tarfile.open(f) as tf:
