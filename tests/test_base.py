@@ -264,11 +264,11 @@ class TestSetVersionBasics(SetVersionBaseTest):
         files_local = ['test-v1.2.3.tar']
 
         # checking dirname in archive detection
-        args = {'regex': '^test-v(.*)', 'basename': ''}
+        args = {'regex': '^test-v(.*)', 'basename': '', 'fromfile': None}
         ver = sv._version_detect(args, files_local)
         self.assertEqual(ver, '1.2.3')
 
         # checking archive filename detection
-        args = {'regex': '^test-v(.*).tar', 'basename': ''}
+        args = {'regex': '^test-v(.*).tar', 'basename': '', 'fromfile': None}
         ver = sv._version_detect(args, files_local)
         self.assertEqual(ver, '1.2.3')
