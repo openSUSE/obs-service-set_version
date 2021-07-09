@@ -42,7 +42,7 @@ if os.environ.get('DEBUG_SET_VERSION') == "1":
 
 outdir = None
 suffixes = ('.obscpio', '.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2',
-            '.tar.xz', '.zip')
+            '.tar.xz', '.tar.zst', '.zip')
 suffixes_re = "|".join(map(lambda x: re.escape(x), suffixes))
 
 
