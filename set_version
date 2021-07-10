@@ -67,16 +67,16 @@ class VersionDetector(object):
             print("Starting version autodetect")
 
         if DEBUG:
-            print("-- Starting version detection via obsinfo")
-        version = self._get_version_via_obsinfo()
-        if not version:
-            if DEBUG:
-                print("--- Could not find version via obsinfo")
-                print("-- Starting version detection via specified file")
-            version = self._get_version_via_versionfile()
+            print("-- Starting version detection via specified file")
+        version = self._get_version_via_versionfile()
         if not version:
             if DEBUG:
                 print("--- Could not find version via specified file")
+                print("-- Starting version detection via obsinfo")
+            version = self._get_version_via_obsinfo()
+        if not version:
+            if DEBUG:
+                print("--- Could not find version via obsinfo")
                 print("-- Starting version detection via archive dirname")
             version = self._get_version_via_archive_dirname()
         if not version:
@@ -139,7 +139,8 @@ class VersionDetector(object):
         if not os.path.exists(self.versionfile):
             if DEBUG:
                 print("  - file: %s does not exist", self.versionfile)
-            return None
+            raise OSError(os.errno.ENOENT, os.strerror(os.errno.ENOENT),
+                          self.versionfile)
 
         with codecs.open(self.versionfile, 'r', 'utf8') as fp:
             for line in fp:
@@ -428,7 +429,11 @@ if __name__ == '__main__':
     files_local = _get_local_files()
 
     if not version:
-        version = _version_detect(args, files_local)
+        try:
+            version = _version_detect(args, files_local)
+        except Exception as e:
+            print("Detection failed with error: \"", e, "\".")
+            sys.exit(-1)
 
     if not version:
         print("unable to detect the version")
