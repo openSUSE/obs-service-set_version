@@ -23,6 +23,7 @@ import sys
 import tarfile
 import zipfile
 import codecs
+import logging
 
 try:
     from packaging.version import LegacyVersion, Version, parse
@@ -35,10 +36,8 @@ else:
     HAS_PACKAGING = True
 
 
-DEBUG = False
-
 if os.environ.get('DEBUG_SET_VERSION') == "1":
-    DEBUG = True
+    logging.getLogger().setLevel(logging.DEBUG)
 
 outdir = None
 suffixes = ('.obscpio', '.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2',
@@ -63,47 +62,36 @@ class VersionDetector(object):
         self.versionfile = versionfile
 
     def autodetect(self):
-        if DEBUG:
-            print("Starting version autodetect")
-
-        if DEBUG:
-            print("-- Starting version detection via specified file")
+        logging.debug("Starting version autodetect")
+        logging.debug("-- Starting version detection via specified file")
         version = self._get_version_via_versionfile()
         if not version:
-            if DEBUG:
-                print("--- Could not find version via specified file")
-                print("-- Starting version detection via obsinfo")
+            logging.debug("--- Could not find version via specified file")
+            logging.debug("-- Starting version detection via obsinfo")
             version = self._get_version_via_obsinfo()
         if not version:
-            if DEBUG:
-                print("--- Could not find version via obsinfo")
-                print("-- Starting version detection via archive dirname")
+            logging.debug("--- Could not find version via obsinfo")
+            logging.debug("-- Starting version detection via archive dirname")
             version = self._get_version_via_archive_dirname()
         if not version:
-            if DEBUG:
-                print("--- Could not find version via archive dirname")
-                print("-- Starting version detection via filename")
+            logging.debug("--- Could not find version via archive dirname")
+            logging.debug("-- Starting version detection via filename")
             version = self._get_version_via_filename()
         if not version:
-            if DEBUG:
-                print("--- Could not find version via filename")
-                print("-- Starting version detection via debian changelog")
+            logging.debug("--- Could not find version via filename")
+            logging.debug("-- Starting version detection via debian changelog")
             version = self.get_version_via_debian_changelog("debian.changelog")
         if not version:
-            if DEBUG:
-                print("--- Could not find version via debian changelog")
+            logging.debug("--- Could not find version via debian changelog")
         return version
 
     def _get_version_via_filename(self):
         """ detect version based on file names"""
-        if DEBUG:
-            print("detecting version via files")
+        logging.debug("detecting version via files")
         for f in self.file_list:
-            if DEBUG:
-                print("  - checking file ", f)
+            logging.debug("  - checking file %s", f)
             if self.regex:
-                if DEBUG:
-                    print("  - using regex: ", self.regex)
+                logging.debug("  - using regex: %r", self.regex)
                 regex = self.regex
             else:
                 regex = r"^%s.*[-_]([\d].*)(?:%s)$" % (
@@ -117,28 +105,23 @@ class VersionDetector(object):
 
     def _get_version_via_versionfile(self):
         """ detect version based on custom file contents"""
-        if DEBUG:
-            print("detecting version via custom file")
+        logging.debug("detecting version via custom file")
 
         if not self.versionfile:
-            if DEBUG:
-                print("Custom file name not set")
+            logging.debug("Custom file name not set")
             return None
 
-        if DEBUG:
-            print("  - checking file ", self.versionfile)
+        logging.debug("  - checking file '%s'", self.versionfile)
 
         if self.regex:
             regex = self.regex
         else:
             regex = r"^[Vv]ersion:\s+([\d].*)(?:)\s?$"
 
-        if DEBUG:
-            print("  - using regex: ", regex)
+        logging.debug("  - using regex: %r", regex)
 
         if not os.path.exists(self.versionfile):
-            if DEBUG:
-                print("  - file: %s does not exist", self.versionfile)
+            logging.debug("  - file: %s does not exist", self.versionfile)
             raise OSError(os.errno.ENOENT, os.strerror(os.errno.ENOENT),
                           self.versionfile)
 
@@ -165,11 +148,9 @@ class VersionDetector(object):
     def _get_version_via_archive_dirname(self):
         """ detect version based tar'd directory name"""
         for f in filter(lambda x: x.endswith(suffixes), self.file_list):
-            if DEBUG:
-                print("Checking path: '%s'." % f)
+            logging.debug("Checking path: '%s'.", f)
             if not os.path.isfile(f):
-                if DEBUG:
-                    print("Skipping path: '%s' is not a regular file." % f)
+                logging.debug("Skipping path: '%s' is not a regular file.", f)
                 continue
             # handle tarfiles
             if tarfile.is_tarfile(f):
@@ -252,8 +233,7 @@ class PackageTypeDetector(object):
     def _is_python(f):
         names = []
         if not os.path.isfile(f):
-            if DEBUG:
-                print("Skipping path: '%s' is not a regular file." % f)
+            logging.debug("Skipping path: '%s' is not a regular file.", f)
             return False
         if tarfile.is_tarfile(f):
             with tarfile.open(f) as tf:
@@ -382,8 +362,7 @@ def _version_detect(args, files_local):
     vdetect = VersionDetector(args['regex'], files_local, args["basename"],
                               args["fromfile"])
     ver = vdetect.autodetect()
-    if DEBUG:
-        print("Found version '%s'" % ver)
+    logging.debug("Found version '%s'", ver)
 
     return ver
 
@@ -423,8 +402,8 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     if args['debug']:
-        print("Running in debug mode")
-        DEBUG = True
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug("Running in debug mode")
 
     files_local = _get_local_files()
 
