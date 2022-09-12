@@ -29,6 +29,8 @@
 %define use_python python
 %endif
 
+%define python_path %{_bindir}/%{use_python}
+
 Name:           obs-service-%{service}
 Version:        0.5.14
 Release:        0
@@ -47,13 +49,10 @@ BuildRequires:  %{use_python}-packaging
 %endif
 
 %if 0%{?suse_version}
-%if 0%{?suse_version} > 1315
-Requires:       python3-base
-%else
-Requires:       python
-%endif
 Recommends:     %{use_python}-packaging
 %endif
+
+Requires:       %{python_path}
 
 %description
 This is a source service for openSUSE Build Service.
@@ -65,7 +64,7 @@ a given version or to the existing files.
 %setup -q
 
 %build
-sed -i -e "1 s,#!/usr/bin/python$,#!/usr/bin/%{use_python}," set_version
+sed -i -e "1 s,#!/usr/bin/python$,#!%{python_path}," set_version
 
 %if %{with obs_scm_testsuite}
 %check
