@@ -320,6 +320,20 @@ def _replace_tag(filename, tag, string):
             f.write(contents_new)
 
 
+def _replace_regex(filename, regex, string):
+    # first, modify a copy of filename and then move it
+    with codecs.open(filename, 'r+', 'utf8') as f:
+        contents = f.read()
+        f.seek(0)
+        # keep inline macros for rpm
+        contents_new, subs = re.subn(
+            r'{regex}'.format(regex=regex),
+            string, contents, flags=re.MULTILINE)
+        if subs > 0:
+            f.truncate()
+            f.write(contents_new)
+
+
 def _replace_debian_changelog_version(fname, version_new):
     # first, modify a copy of filename and then move it
     # get current version
@@ -384,6 +398,8 @@ if __name__ == '__main__':
     parser.add_argument('--file', action='append',
                         help='modify only this build description. '
                         'maybe used multiple times.')
+    parser.add_argument('--replace-regex', default="",
+                        help='replace the given regex with version. Requires defined files for replaces, `file` parameter')
     parser.add_argument('--debug', default=False,
                         help='Enable more verbose output.')
     parser.add_argument('--regex',
@@ -418,6 +434,10 @@ if __name__ == '__main__':
         print("unable to detect the version")
         sys.exit(-1)
 
+    if not args['file'] and args['replace_regex']:
+        print("replace-regex parameter requires, at least, a 'file' parameter")
+        sys.exit(-1)
+
     # if no files explicitly specified process whole directory
     files = args['file'] or files_local
 
@@ -426,6 +446,13 @@ if __name__ == '__main__':
     version_converted = None
     if pack_type == "python":
         version_converted = _version_python_pip2rpm(version)
+
+    # handle regex-replace
+    if args['replace_regex']:
+        for f in files:
+            filename = outdir + "/" + f
+            shutil.copyfile(f, filename)
+            _replace_regex(filename, args['replace_regex'], version)
 
     # handle rpm specs
     for f in filter(lambda x: x.endswith(".spec"), files):
