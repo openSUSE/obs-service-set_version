@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 # A simple script to update version number in spec, dsc or arch linux files
@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import argparse
+from contextlib import suppress
 import glob
 import os
 import re
@@ -26,7 +27,7 @@ import codecs
 import logging
 
 try:
-    from packaging.version import LegacyVersion, Version, parse
+    from packaging.version import Version, parse
 except ImportError:
     HAS_PACKAGING = False
     import warnings
@@ -35,6 +36,9 @@ except ImportError:
 else:
     HAS_PACKAGING = True
 
+if HAS_PACKAGING:
+    with suppress(ImportError):
+        from packaging.version import LegacyVersion
 
 if os.environ.get('DEBUG_SET_VERSION') == "1":
     logging.getLogger().setLevel(logging.DEBUG)
@@ -351,8 +355,11 @@ def _version_python_pip2rpm(version_pip):
             v_rpm = v_rpm.replace('rc', '~xrc')
             v_rpm = v_rpm.replace('.dev', '~dev')
             version_rpm = v_rpm
-    elif isinstance(v, LegacyVersion):
-        # TODO(toabctl): handle setuptools style legacy version
+    else:
+        with suppress(NameError):
+            if isinstance(v, LegacyVersion):
+                # TODO(toabctl): handle setuptools style legacy version
+                pass
         pass
 
     return version_rpm
