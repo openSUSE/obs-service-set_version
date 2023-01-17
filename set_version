@@ -344,7 +344,12 @@ def _version_python_pip2rpm(version_pip):
     if not HAS_PACKAGING:
         return version_rpm
 
-    v = parse(version_pip)
+    try:
+        v = parse(version_pip)
+    except packaging.version.InvalidVersion:
+        # Maybe is converted already?
+        return None
+
     if isinstance(v, Version):
         if v.is_prerelease:
             v_rpm = v.public
@@ -430,9 +435,8 @@ if __name__ == '__main__':
     files = args['file'] or files_local
 
     # do version convertion if needed
-    pack_type = PackageTypeDetector._get_package_type(files)
     version_converted = None
-    if pack_type == "python":
+    if PackageTypeDetector._get_package_type(files) == "python":
         version_converted = _version_python_pip2rpm(version)
 
     # handle rpm specs

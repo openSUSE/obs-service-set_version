@@ -118,7 +118,8 @@ class VersionConverterTest(SetVersionBaseTest):
         ('1.2-dev2', '1.2~dev2'),
         ('1.0.post1', '1.0.post1'),
         ('1.0rc1', '1.0~xrc1'),
-        ('1.0b1', '1.0~xbeta1')
+        ('1.0b1', '1.0~xbeta1'),
+        ('1.7.40~svn', None)
     )
     @unpack
     def test_python_version_pip2rpm(self, pip_ver, expected_ver):
