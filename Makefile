@@ -1,5 +1,5 @@
 prefix = /usr
-PYTHON ?= python
+PYTHON ?= python3
 
 servicedir = ${prefix}/lib/obs/service
 
