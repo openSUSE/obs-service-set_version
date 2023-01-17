@@ -25,6 +25,7 @@ import tarfile
 import zipfile
 import codecs
 import logging
+import packaging
 
 try:
     from packaging.version import Version, parse
