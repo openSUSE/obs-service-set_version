@@ -25,10 +25,9 @@ import tarfile
 import zipfile
 import codecs
 import logging
-import packaging
 
 try:
-    from packaging.version import Version, parse
+    from packaging.version import InvalidVersion, Version, parse
 except ImportError:
     HAS_PACKAGING = False
     import warnings
@@ -346,7 +345,7 @@ def _version_python_pip2rpm(version_pip):
 
     try:
         v = parse(version_pip)
-    except packaging.version.InvalidVersion:
+    except InvalidVersion:
         # Maybe is converted already?
         return None
 
