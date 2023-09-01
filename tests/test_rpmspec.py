@@ -16,13 +16,13 @@
 
 
 import os
-import imp
 import shutil
 from ddt import data, ddt, file_data, unpack
 
 from test_base import SetVersionBaseTest
+from tests.loader import import_set_version
 
-sv = imp.load_source("set_version", "set_version")
+sv = import_set_version()
 
 
 @ddt

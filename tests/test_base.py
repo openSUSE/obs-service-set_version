@@ -15,7 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,USA.
 
 
-import imp
 import os
 import re
 import shutil
@@ -25,15 +24,15 @@ import tarfile
 import tempfile
 import unittest
 
-
 from ddt import data, ddt, unpack
+
+from loader import import_set_version
 
 DEBUG = False
 if os.environ.get('DEBUG_SET_VERSION') == "1":
     DEBUG = True
 
-# NOTE(toabctl): Hack to import non-module file for testing
-sv = imp.load_source("set_version", "set_version")
+sv = import_set_version()
 
 
 SET_VERSION_EXECUTABLE = os.path.abspath(
