@@ -324,6 +324,19 @@ def _replace_tag(filename, tag, string):
             f.write(contents_new)
 
 
+def _replace_variable(filename, variable, string):
+    # cmake configure_file behavior, replace variables marked with @ sign
+    with codecs.open(filename, 'r+', 'utf8') as f:
+        contents = f.read()
+        f.seek(0)
+        contents_new, subs = re.subn(
+            r"@{variable}@".format(variable=variable),
+            string, contents, flags=re.MULTILINE)
+        if subs > 0:
+            f.truncate()
+            f.write(contents_new)
+
+
 def _replace_debian_changelog_version(fname, version_new):
     # first, modify a copy of filename and then move it
     # get current version
@@ -460,8 +473,12 @@ if __name__ == '__main__':
         shutil.copyfile(f, filename)
         if "-" in VersionDetector._get_version_via_debian_dsc(filename):
             _replace_tag(filename, 'Version', version + "-0")
+            _replace_variable(filename, 'VERSION', version)
+            _replace_variable(filename, 'VERSION-RELEASE', version + "-0")
         else:
             _replace_tag(filename, 'Version', version)
+            _replace_variable(filename, 'VERSION', version)
+            _replace_variable(filename, 'VERSION-RELEASE', version)
 
     for f in filter(lambda x: x.endswith(("debian.changelog")), files):
         filename = outdir + "/" + f
