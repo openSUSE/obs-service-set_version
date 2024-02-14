@@ -15,7 +15,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,USA.
 
 
-import imp
 import os
 import subprocess
 import unittest
@@ -25,10 +24,10 @@ from ddt import data, ddt, unpack
 from packaging.version import parse
 
 from test_base import SetVersionBaseTest
+from tests.loader import import_set_version
 
 
-# NOTE(toabctl): Hack to import non-module file for testing
-sv = imp.load_source("set_version", "set_version")
+sv = import_set_version()
 
 
 def _has_zypper():
