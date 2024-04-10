@@ -233,7 +233,7 @@ class RevisionDetector(object):
     @staticmethod
     def _get_revision_from_osc_files():
         from xml.etree import ElementTree
-        _filesname = os.path.join('.osc','_files')
+        _filesname = os.path.join('.osc', '_files')
         _filesXML = ElementTree.parse(_filesname)
         return _filesXML.getroot().attrib['rev']
 
