@@ -16,6 +16,7 @@ from __future__ import print_function
 
 import argparse
 from contextlib import suppress
+import errno
 import glob
 import os
 import re
@@ -126,7 +127,7 @@ class VersionDetector(object):
 
         if not os.path.exists(self.versionfile):
             logging.debug("  - file: %s does not exist", self.versionfile)
-            raise OSError(os.errno.ENOENT, os.strerror(os.errno.ENOENT),
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT),
                           self.versionfile)
 
         with codecs.open(self.versionfile, 'r', 'utf8') as fp:
@@ -232,7 +233,7 @@ class RevisionDetector(object):
     @staticmethod
     def _get_revision_from_osc_files():
         from xml.etree import ElementTree
-        _filesname = os.path.join('.osc','_files')
+        _filesname = os.path.join('.osc', '_files')
         _filesXML = ElementTree.parse(_filesname)
         return _filesXML.getroot().attrib['rev']
 
