@@ -50,8 +50,17 @@ def _has_dpkg():
         return False
 
 
+def _has_packaging():
+    try:
+        import packaging.version  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 HAS_ZYPPER = _has_zypper()
 HAS_DPKG = _has_dpkg()
+HAS_PACKAGING = _has_packaging()
 
 
 class VersionCompareBase(object):
@@ -118,7 +127,7 @@ class VersionConverterTest(SetVersionBaseTest):
         ('1.0.post1', '1.0.post1'),
         ('1.0rc1', '1.0~xrc1'),
         ('1.0b1', '1.0~xbeta1'),
-        ('1.7.40~svn', None)
+        ('1.7.40~svn', ('1.7.40~svn' if not HAS_PACKAGING else None))
     )
     @unpack
     def test_python_version_pip2rpm(self, pip_ver, expected_ver):
