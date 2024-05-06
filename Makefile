@@ -12,6 +12,8 @@ install:
 
 test:
 	flake8 set_version tests/
+	echo "Using python ${PYTHON}"
+	${PYTHON} --version
 	${PYTHON} -m unittest discover tests/
 
 clean:
