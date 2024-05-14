@@ -375,6 +375,9 @@ def _version_python_pip2rpm(version_pip):
 
     try:
         v = parse(version_pip)
+        with suppress(NameError):
+            if isinstance(v, LegacyVersion):
+                raise InvalidVersion
     except InvalidVersion:
         # Maybe is converted already?
         return None
