@@ -413,9 +413,22 @@ def _version_detect(args, files_local):
 
 
 def _revision_detect(args):
-    revdetect = RevisionDetector()
-    revision = revdetect.autodetect()
-    logging.debug("Found revision '%s'", revision)
+    revision = args['revision']
+    if revision:
+        return revision
+
+    if not revision:
+        try:
+            revdetect = RevisionDetector()
+            revision = revdetect.autodetect()
+            logging.debug("Found revision '%s'", revision)
+        except Exception as e:
+            print("Revision detection failed with error: \"", e, "\".")
+            revision = '0'
+
+    if not revision:
+        print("unable to detect the revision")
+        sys.exit(-1)
 
     return revision
 
@@ -473,17 +486,6 @@ if __name__ == '__main__':
 
     if not version:
         print("unable to detect the version")
-        sys.exit(-1)
-
-    if not revision:
-        try:
-            revision = _revision_detect(args)
-        except Exception as e:
-            print("Revision detection failed with error: \"", e, "\".")
-            revision = '0'
-
-    if not revision:
-        print("unable to detect the revision")
         sys.exit(-1)
 
     # if no files explicitly specified process whole directory
@@ -546,4 +548,4 @@ if __name__ == '__main__':
         _replace_tag(filename, "md5sums", "('SKIP')")
         _replace_tag(filename, "sha256sums", "('SKIP')")
         _replace_tag(filename, "pkgver", version)
-        _replace_tag(filename, "pkgrel", revision)
+        _replace_tag(filename, "pkgrel", _revision_detect(args))
