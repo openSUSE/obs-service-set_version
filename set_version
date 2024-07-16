@@ -222,22 +222,6 @@ class VersionDetector(object):
         return None
 
 
-class RevisionDetector(object):
-
-    def __init__(self):
-        pass
-
-    def autodetect(self):
-        return self._get_revision_from_osc_files()
-
-    @staticmethod
-    def _get_revision_from_osc_files():
-        from xml.etree import ElementTree
-        _filesname = os.path.join('.osc', '_files')
-        _filesXML = ElementTree.parse(_filesname)
-        return _filesXML.getroot().attrib['rev']
-
-
 class PackageTypeDetector(object):
     # pylint: disable=too-few-public-methods
     @staticmethod
@@ -423,9 +407,6 @@ if __name__ == '__main__':
     parser.add_argument('--version',
                         help='use given version string, do not detect it '
                         'from source files')
-    parser.add_argument('--revision',
-                        help='use given revision string, do not detect it '
-                        'from obs files')
     parser.add_argument('--basename', default="",
                         help='detect version based on the file name with '
                         'a given prefix')
@@ -442,7 +423,6 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     version = args['version']
-    revision = args['revision']
 
     outdir = args['outdir']
 
