@@ -412,27 +412,6 @@ def _version_detect(args, files_local):
     return ver
 
 
-def _revision_detect(args):
-    revision = args['revision']
-    if revision:
-        return revision
-
-    if not revision:
-        try:
-            revdetect = RevisionDetector()
-            revision = revdetect.autodetect()
-            logging.debug("Found revision '%s'", revision)
-        except Exception as e:
-            print("Revision detection failed with error: \"", e, "\".")
-            revision = '0'
-
-    if not revision:
-        print("unable to detect the revision")
-        sys.exit(-1)
-
-    return revision
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
@@ -548,4 +527,4 @@ if __name__ == '__main__':
         _replace_tag(filename, "md5sums", "('SKIP')")
         _replace_tag(filename, "sha256sums", "('SKIP')")
         _replace_tag(filename, "pkgver", version)
-        _replace_tag(filename, "pkgrel", _revision_detect(args))
+        _replace_tag(filename, "pkgrel", "0")
