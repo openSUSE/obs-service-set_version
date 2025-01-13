@@ -6,7 +6,7 @@ arch=('i686' 'x86_64')
 url="https://www.github.com/openSUSE/obs-service-set_version"
 license=('GPL-2.0+' 'GPL-2.0')
 groups=('base-devel')
-depends=('python')
+depends=('python' 'python-packaging')
 source=(obs-service-set_version-${pkgver}.tar.gz)
 md5sums=('SKIP')
 
